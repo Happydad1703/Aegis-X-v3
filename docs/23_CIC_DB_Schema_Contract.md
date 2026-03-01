@@ -1,0 +1,23 @@
+# 23_CIC_DB_Schema_Contract.md
+목적
+CIC 관련 DB 구조 고정
+필수 테이블
+ext_event_raw
+engine_result
+engine_snapshot
+decision_log
+incident_log
+llm_usage_log
+snapshot_key 예시
+regime_current
+allocation_current
+risk_current
+cic_multi_target_view
+cic_variance_by_symbol
+cic_footer_stream
+cic_system_health
+Index 전략
+snapshot_key
+computed_ts_utc
+source_name
+freshness_status

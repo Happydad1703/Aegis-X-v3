@@ -1,0 +1,88 @@
+17_1 KIS_Account+API_Key_in Windows 11
+1) Docker 기반 PostgreSQL 운영 기준 (Baseline)
+1.1 컨테이너 정책
+•	단일 Postgres 인스턴스(초기) + 영속 볼륨(volume)
+•	데이터 디렉토리는 반드시 Docker volume에 매핑(컨테이너 재생성해도 데이터 유지)
+•	포트: 기본 5432
+•	DB명/계정/패스워드는 **환경변수(.env 또는 OS env)**로만 주입
+1.2 네트워크 정책
+•	앱(파이썬/FastAPI/스케줄러)이 Docker 밖(호스트)에서 동작해도 연결 가능
+•	향후 앱도 Docker로 묶을 경우를 대비해 docker network 사용 권장
+________________________________________
+2) docker-compose.yml (권장)
+아래 스펙이면 Aegis-X에 필요한 최소 요건을 충족합니다:
+•	영속 볼륨
+•	healthcheck
+•	timezone
+•	(선택) init SQL
+services:
+  postgres:
+    image: postgres:16
+    container_name: aegisx-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: aegisx
+      POSTGRES_USER: aegisx
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      TZ: Asia/Seoul
+    ports:
+      - "5432:5432"
+    volumes:
+      - aegisx_pgdata:/var/lib/postgresql/data
+      # (선택) 초기 스키마/테이블 생성 스크립트
+      # - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aegisx -d aegisx"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  aegisx_pgdata:
+DB 패스워드는 DB_PASSWORD로만 주입하고, 파일/코드에 하드코딩하지 않습니다.
+________________________________________
+3) Aegis-X 환경변수(DB_*)
+기존 문서의 DB 항목을 Docker 기준으로 확정:
+•	DB_HOST=localhost (앱이 호스트에서 실행 시)
+•	DB_PORT=5432
+•	DB_NAME=aegisx
+•	DB_USER=aegisx
+•	DB_PASSWORD=...
+추가 권장:
+•	DB_SSLMODE=disable (로컬) / 운영환경에서는 require 고려
+________________________________________
+4) 운영 절차 (Windows 11 + PowerShell)
+Bash 없이 PowerShell 기준으로:
+•	시작: docker compose up -d
+•	상태: docker ps
+•	로그: docker logs -f aegisx-postgres
+•	종료: docker compose down
+•	데이터까지 삭제(주의): docker compose down -v
+________________________________________
+5) SE 문서 반영 포인트(필수 업데이트)
+이 결정을 “공식 기준”으로 문서에 반영해야 합니다. 최소 수정 대상:
+1.	02_System_Architecture_SAD.md
+•	Physical/Deployment에 “PostgreSQL in Docker container” 명시
+•	DB 의존성/포트/볼륨 정책
+2.	04_Data_Architecture_DDD.md
+•	DB 저장소(PostgreSQL) 운용 방식(컨테이너/영속 볼륨) 명시
+•	백업/스냅샷 정책 연결
+3.	03_ICD.md
+•	“DB (PostgreSQL)” 항목에 접속 파라미터 + healthcheck 기준 포함
+4.	16_Config_Management_Plan.md
+•	docker-compose.yml을 형상관리 대상(CI)로 추가
+•	DB 버전(postgres:16) 고정, 변경 시 CR 절차
+5.	17_Security_Model.md
+•	DB 접근 권한 분리(RBAC), 패스워드 주입/보관 정책
+•	백업 암호화/접근 제한
+6.	14_TVP.md
+•	Integration Test에 “DB 컨테이너 healthcheck 통과”를 선행 게이트로 추가
+________________________________________
+6) 추가 권장(복잡성 대응)
+6.1 “DB 부팅 게이트”를 check_comm 선행조건으로
+•	check_comm.py 수행 전:
+o	컨테이너 healthcheck OK
+o	DB 접속/간단 쿼리 OK
+6.2 백업 표준
+•	매일 1회 pg_dump(호스트에서 실행 가능)
+•	백업 파일은 Governance의 Retention Policy와 연결(3년/영구 등)

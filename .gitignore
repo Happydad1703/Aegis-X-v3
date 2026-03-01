@@ -1,0 +1,17 @@
+# Aegis-X v3
+.env
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+.DS_Store
+*.log
+docx_md/*.docx
+~$*
+*.tmp

@@ -1,0 +1,122 @@
+17_4 Rules_DB First_DB-only UI
+DB 기록 규칙 + DB-only UI 원칙 + 스케줄/리프레시 자원 최적화 설계
+
+0) 핵심 원칙(요청사항을 규정으로 고정)
+R0. DB-First / DB-Only
+•	외부기관으로부터 획득한 원천 데이터(Raw)와 엔진 처리 결과(Result)는 반드시 DB에 기록
+•	모든 프로세스/알고리즘의 입력 데이터는 DB에서만 조회
+•	처리 결과도 DB에 기록
+•	Warroom/CIC/Control Panel은 DB에서만 읽어 렌더링(엔진 메모리나 외부 API 직접 참조 금지)
+→ 결론: “DB가 SSOT(단일 진실 공급원)”이며, UI는 DB 읽기 전용 Consumer.
+________________________________________
+1) DB 기록/조회 아키텍처(권장)
+1.1 파이프라인 표준 흐름(강제)
+External Source → Ingest → DB(raw_event) → Process Engine reads DB → DB(result_event) → CIC reads DB
+1.2 “직접 호출 금지” 규칙
+•	UI가 외부 API를 직접 호출: 금지
+•	UI가 엔진 메모리(캐시)를 직접 조회: 금지
+•	엔진이 외부 API 결과를 DB에 쓰지 않고 바로 처리: 금지
+•	엔진이 DB 없이 파일/메모리만 입력으로 사용: 금지(예외는 시스템 부팅/비상 fallback만)
+________________________________________
+2) DB 스키마 원칙(최소 필수 테이블)
+이미 PostgreSQL을 Docker로 고정했으므로, PostgreSQL을 이벤트 스토어 + 최신 스냅샷 저장소로 씁니다.
+2.1 원천 이벤트 (Raw)
+•	ext_event_raw
+o	id
+o	source_name (FRED/ECOS/DART/NAVER/…/KIS)
+o	entity_key (예: DGS10, 722Y001, 공시번호, 뉴스 URL hash, symbol)
+o	payload_jsonb (원문/원문요약/메타 포함)
+o	data_ts_utc (원천 데이터 시각)
+o	ingested_ts_utc (수집 시각)
+o	refresh_interval_sec (스케줄 기준)
+o	fetch_latency_ms
+o	status (OK/EMPTY/ERROR)
+o	error_code, error_msg
+2.2 처리 결과 (Result)
+•	engine_result
+o	id
+o	engine_name (Regime/Allocation/Risk/Fleet/Twin/Meta/SelfHeal)
+o	engine_version
+o	input_ref (입력으로 사용한 raw_event/result_event의 reference)
+o	result_jsonb
+o	computed_ts_utc
+o	refresh_interval_sec
+o	compute_latency_ms
+o	confidence
+o	freshness_status (GREEN/YELLOW/RED)
+2.3 최신 스냅샷(빠른 UI용)
+•	engine_snapshot
+o	snapshot_key (예: regime_current, allocation_current, risk_current, cic_multi_target_view)
+o	snapshot_jsonb
+o	asof_ts_utc
+o	refresh_interval_sec
+o	freshness_status
+중요: UI Latency 최소화는 “event table을 매번 스캔”하지 않고, snapshot 테이블/뷰를 읽게 해서 해결합니다.
+________________________________________
+3) Warroom/CIC는 DB만 읽고, Latency는 “DB Snapshot”으로 줄인다
+사용자 요구가 “DB로부터만”인데도 느려지지 않게 하려면:
+•	엔진은 결과를 engine_result에 저장(감사용)
+•	동시에 최신값은 engine_snapshot에 upsert(빠른 조회용)
+•	CIC는 engine_snapshot만 조회(평상시)
+•	필요 시 “드릴다운” 버튼으로 engine_result / ext_event_raw를 열람(감사/근거)
+3.1 CIC 데이터 계약(필수 메타)
+모든 snapshot/result는 반드시:
+•	Source(실명제)
+•	Timestamp(UTC+KST)
+•	Refresh interval
+•	Freshness
+•	Compute latency / Fetch latency
+를 포함해야 함(이전 요구사항과 완전 합치)
+________________________________________
+4) 스케줄/리프레시: “죽지 않는 시스템” 설계
+요구하신 핵심: PC 자원(CPU/GPU, RAM, 네트워크, 포트)을 참조해서 가장 합리적으로.
+4.1 스케줄러가 해야 하는 일(정의)
+스케줄러는 단순 타이머가 아니라 “자원 오케스트레이터”입니다.
+•	각 태스크의 기본 주기(Refresh Rate)
+•	우선순위(Tier: critical / normal / low)
+•	동시 실행 제한(Concurrency)
+•	자원 기반 스로틀링(CPU/RAM/네트워크)
+•	장애 시 백오프/격리(Self-Healing lite)
+4.2 Refresh Tier 개념(권장)
+•	critical_only: 살아남기(위험감지, KIS sync, 핵심 리스크)만
+•	normal: 기본 운영
+•	low_resource: PC 자원 부족 시 자동 다운시프트
+(이미 refresh_schedule.yaml 개념이 있으니, 이를 “운영 통제 정책”으로 승격)
+4.3 자원 피드백 루프(핵심)
+스케줄러는 매 실행 사이클마다:
+•	CPU 사용률
+•	RAM 사용률
+•	네트워크 오류율/응답 지연
+•	DB latency
+를 읽고, scan_multiplier를 자동 조정합니다.
+예시 정책(권장):
+•	CPU > 85% 3분 지속 → scan_multiplier +0.5
+•	RAM > 85% → heavy tasks(LLM batch, SEC) 일시 중단
+•	네트워크 에러율 > 10% → 외부 뉴스 수집 백오프
+•	DB write latency > 임계치 → event batch size 감소
+4.4 “죽지 않는” 실패 처리(강제)
+모든 ingest/engine task는:
+•	타임아웃
+•	재시도(제한)
+•	서킷브레이커(연속 실패 시 일정 시간 중지)
+•	실패 로그 DB 기록
+을 의무화합니다.
+________________________________________
+5) 이 요구사항을 SE 문서에 반영(업데이트 포인트)
+이 원칙은 단순 구현 선택이 아니라 아키텍처 불변 규칙이므로 아래 문서에 반영되어야 합니다.
+•	02_SAD: DB-First / DB-Only 아키텍처, snapshot 전략
+•	04_DDD: ext_event_raw / engine_result / engine_snapshot 구조(SSOT)
+•	11_GOV: 모든 처리 입력/출력이 DB에 기록되는 감사 체계
+•	14_TVP: “DB 기록 누락 시 FAIL” 테스트 케이스 추가
+•	16_CM: 스케줄/리프레시 정책 파일을 형상관리 항목으로 고정
+•	(신규 권장) 18_CIC_Warroom_Spec.md: CIC는 snapshot only 읽기 원칙 + 드릴다운 근거
+________________________________________
+6) 다음 구현 단계(책임개발자 제안: 가장 먼저 할 것)
+당장 가장 큰 레버리지는 2가지입니다.
+A) DB Event/Snapshot 계약 확정
+•	ext_event_raw, engine_result, engine_snapshot 최소 스키마 확정
+•	CIC는 snapshot만 읽는 규칙 확정
+B) 스케줄러에 “자원 피드백” 붙이기
+•	scan_multiplier 자동 조정
+•	circuit breaker & backoff 표준화
+•	실패/지연을 DB에 기록해서 CIC에 표시(실명제+timestamp+refresh 포함)

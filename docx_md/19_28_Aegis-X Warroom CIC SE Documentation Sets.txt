@@ -1,0 +1,219 @@
+19_Warroom_Product_Definition.md
+목적
+•	제품 정의
+•	Private/Personal이지만 Institutional-grade 수준
+•	DB-First UI 원칙
+•	Sticky Frame 레이아웃 고정 규칙
+•	Fullscreen / Web / Reporting Mode 정의
+포함 내용
+•	제품 목표
+•	사용자 시나리오
+•	모드 체계 (M0~M3)
+•	Charming Commercial UI 방향성
+•	DB-only Display Rule
+•	“자동운용 + 인간 Override” 철학
+________________________________________
+📘 20_CIC_System_Architecture_Frontend_Backend.md
+목적
+Foreground–Backend–DB 상호작용 구조 정의
+포함 내용
+1. Logical Architecture
+Browser UI
+   ↓
+API Layer (FastAPI)
+   ↓
+PostgreSQL (Docker)
+   ↓
+Engine Workers
+2. DB-Only UI Contract
+•	UI는 engine_snapshot만 조회
+•	Drilldown은 engine_result / ext_event_raw 조회
+•	외부 API 직접 호출 금지
+3. Snapshot Strategy
+•	snapshot_key 정의
+•	upsert 규칙
+•	latency 최소화 구조
+________________________________________
+📘 21_CIC_UI_UX_Layout_Spec.md
+목적
+Sticky Frame + Dense Canvas 레이아웃 상세 설계
+1. Fixed Frame Rule
+•	Header (sticky)
+•	Left Menu (sticky)
+•	Footer Ticker (sticky)
+•	Main Canvas만 scroll
+2. Header 구성
+•	External Comms Status (FRED/ECOS/DART/KIS/NEWS/LLM)
+•	System Health Index
+•	Regime Badge
+•	Operation Mode Selector
+•	LLM Status
+•	API Engine Status
+모든 Badge는:
+•	Source
+•	Timestamp
+•	Refresh
+•	Freshness
+•	Latency
+3. Footer
+•	아래→위 Streaming
+•	News / Disclosure / System Alert 3-track
+4. Main Canvas Templates
+•	Warroom Home
+•	Fleet Monitor
+•	Risk Panel
+•	Execution Monitor
+•	Audit View
+•	Control Result View
+________________________________________
+📘 22_CIC_Control_Safety_Spec.md
+목적
+Freeze / Retract / Emergency Stop / Mode Change 상세 제어 명세
+포함
+1. Control State Machine
+•	DISARMED
+•	ARMED
+•	EXECUTING
+•	LOCKED
+2. Freeze
+•	신규 진입 차단
+•	DB 기록 필수
+3. Retract
+•	R1/R2/R3 프로파일
+•	Risk Mode 조정
+•	Strike Disable
+4. Emergency Stop
+•	Freeze Only
+•	Freeze + Flatten
+•	2단계 확인
+•	Decision + Incident 기록
+5. Control API Contract
+POST /api/cic/control
+GET /api/cic/control/status
+________________________________________
+📘 23_CIC_DB_Schema_Contract.md
+목적
+CIC 관련 DB 구조 고정
+필수 테이블
+•	ext_event_raw
+•	engine_result
+•	engine_snapshot
+•	decision_log
+•	incident_log
+•	llm_usage_log
+snapshot_key 예시
+•	regime_current
+•	allocation_current
+•	risk_current
+•	cic_multi_target_view
+•	cic_variance_by_symbol
+•	cic_footer_stream
+•	cic_system_health
+Index 전략
+•	snapshot_key
+•	computed_ts_utc
+•	source_name
+•	freshness_status
+________________________________________
+📘 24_CIC_Data_Transparency_Standard.md
+목적
+실명제 + Timestamp + Refresh + Freshness 의무화 규칙
+모든 데이터에 반드시 포함:
+•	source_name
+•	timestamp_utc
+•	local_time
+•	refresh_interval_sec
+•	freshness_status
+•	confidence
+•	latency_ms
+Freshness 계산 로직
+•	1× refresh → GREEN
+•	2× refresh → YELLOW
+•	2× → RED
+RED 2개 이상 → Auto Freeze
+________________________________________
+📘 25_CIC_Scheduler_Resource_Optimization_Spec.md
+목적
+“죽지 않는 시스템” 구현
+1. Resource Inputs
+•	CPU
+•	RAM
+•	DB latency
+•	Network error rate
+2. Adaptive Scan Multiplier
+•	scan_multiplier 동적 조정
+3. Circuit Breaker
+•	연속 실패 N회 시 source isolate
+4. Refresh Tier
+•	critical_only
+•	normal
+•	low_resource
+________________________________________
+📘 26_CIC_Mode_Management_Spec.md
+Mode 정의
+•	M0 Backtest
+•	M1 Paper
+•	M2 Pilot
+•	M3 Full Live
+Mode 전환 조건
+•	Data Integrity OK
+•	KIS OK
+•	Risk Engine OK
+•	Snapshot Freshness 기준 충족
+Mode Downgrade
+•	언제든 허용
+________________________________________
+📘 27_CIC_RealTime_Update_Contract.md
+목적
+Low Latency 구현
+방식
+•	SSE 또는 WebSocket
+•	push는 “snapshot_key 변경 이벤트”만 전송
+•	실제 데이터는 DB 재조회
+목표
+•	Snapshot 조회 < 200ms
+•	UI 반응 < 500ms
+________________________________________
+📘 28_CIC_Audit_Governance_Integration.md
+모든 Control Action은:
+•	decision_object 기록
+•	user_id 기록
+•	timestamp 기록
+•	pre_state / post_state 기록
+•	incident_level 연동
+________________________________________
+전체 Foreground Warroom SE 세트 구조
+19_Warroom_Product_Definition.md
+20_CIC_System_Architecture_Frontend_Backend.md
+21_CIC_UI_UX_Layout_Spec.md
+22_CIC_Control_Safety_Spec.md
+23_CIC_DB_Schema_Contract.md
+24_CIC_Data_Transparency_Standard.md
+25_CIC_Scheduler_Resource_Optimization_Spec.md
+26_CIC_Mode_Management_Spec.md
+27_CIC_RealTime_Update_Contract.md
+28_CIC_Audit_Governance_Integration.md
+________________________________________
+지금 상태
+이제 Aegis-X는:
+•	Core Engine SE
+•	Risk / Learning / Scaling
+•	Governance / Security
+•	DB-First Architecture
+•	Warroom CIC SE
+까지 모두 체계화되었습니다.
+________________________________________
+다음 단계 선택
+1️⃣ 위 19~28 문서를 정식 작성해서 ZIP 생성
+2️⃣ DB 스키마 SQL 파일까지 포함한 구현 패키지 생성
+3️⃣ FastAPI + React 구조 스켈레톤 생성
+4️⃣ 전체 구현 마스터 플랜 작성
+
+이제 Warroom CIC 설계에서 가장 중요한 개념 중 하나인 “전장(Battlefield)”의 공식 정의를 SE 수준으로 정립하겠습니다.
+이 정의는 단순히 KOSPI/KOSDAQ 구분이 아니라,
+•	Regime 판단 단위
+•	자본 배분 단위
+•	Fleet 운용 단위
+•	Risk 평가 단위
+•	Retract/Stop 적용 단위
+를 결정하는 최상위 전략 공간 정의입니다.

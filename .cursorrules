@@ -1,0 +1,9 @@
+# AEGIS-X v3 — Non-negotiable Rules
+1) UI/API read ONLY from engine_snapshot (no compute in UI/API).
+2) engines/ are pure dict->dict functions (NO DB/SQL/HTTP/LLM inside).
+3) DB writes ONLY via snapshot_repo / repo modules (single write path).
+4) Safety priority: EmergencyStop > Retract > Mode > Strategy.
+5) Every displayed datum must include source(real-name), timestamp, refresh_rate metadata.
+
+---
+Full: docs/Cursor_Developer_Mode_Hard_Lock.md | SOO: docs/Cursor_SOO_Phase0_1.md | Guardrails: docs/Cursor_Guardrails_SE_Enforcement.md | Context: docs/Context_Summary_For_New_Chat.md

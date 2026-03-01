@@ -1,0 +1,112 @@
+17_2 CIC Design_Draft v1.0)
+1) CIC 설계 원칙
+1.1 Private/Personal 운용 전제에 맞는 3대 목표
+1.	Autonomy by Default: 정상 상황은 사용자 개입 없이 자동 운용
+2.	Human Override Always: 필요 시 즉시 개입(Stop/Freeze/Retract)
+3.	Explainable, Auditable: “왜 지금 이렇게 하는지” 3줄로 설명 + 기록
+1.2 조작 안전성(오조작 방지) 기본 규칙
+•	“위험한 버튼”은 2단계(Arm → Execute) 또는 길게 누르기(Press&Hold 2~3s)
+•	실행 후 **즉시 되돌리기(Undo)**가 가능한 범위는 제공(예: 신규진입 재개)
+•	**되돌리기 불가(Stop/Flatten)**는 강하게 경고 + 사유 기록 필수
+________________________________________
+2) 운용 모드 체계 (Mode Model)
+요청하신 4모드를 “실행권한/데이터원천/검증단계”로 명확히 분리합니다.
+M0. Historical Verification (과거장 검증)
+•	데이터: 과거 Ledger + macro_context + price series
+•	목적: 전략/파라미터 검증, TVP 통과
+•	주문: 없음(시뮬레이션)
+•	핵심 버튼: Run Twin / Compare / Promote Candidate
+M1. Paper Trade (현재장 종이매매)
+•	데이터: 실시간 수집(뉴스/공시/시세) + 실제 신호 생성
+•	주문: 모의(브로커 주문 X 또는 모의주문)
+•	목적: “현재 시장 구조”에서 논리/운영/지연 검증(Shadow)
+•	핵심 버튼: Arm Pilot / Risk Gate Test / Drift Monitor
+M2. Pilot Live (실장 파일럿)
+•	데이터: 실시간 + KIS 단일계좌
+•	주문: 실제(단, 자본·종목·횟수 제한)
+•	목적: 슬리피지/체결/심리적 리스크 포함 실전 검증
+•	핵심 버튼: Caps Slider / Freeze New Entries / Retract
+M3. Full Live (실장 풀라이브)
+•	데이터: 실시간 + KIS 단일계좌
+•	주문: 실제(정상 운영)
+•	목적: 운영
+•	핵심 버튼: Emergency Stop / Retract / Mode Downgrade
+모드 전환 규칙(권고): M0→M1→M2→M3 순차만 허용. 역방향은 언제든 가능(M3→M2→M1).
+________________________________________
+3) “Emergency Stop”과 “Retract”의 정확한 정의
+사용자 요구가 가장 중요한 부분이므로, 두 버튼의 의미를 시스템적으로 분리해야 합니다.
+3.1 Emergency Stop (비상정지)
+목표: “더 이상 자동 행동 금지”
+•	즉시 수행:
+o	FREEZE_NEW_ENTRIES = TRUE
+o	모든 스케줄러(진입/재밸런스/전략승격) 정지
+o	주문 제출 차단(단, 기존 포지션의 리스크 방어용 청산/헷지는 정책에 따라 허용 가능)
+•	옵션(운영 정책으로 선택):
+o	Stop = Freeze Only (신규진입 금지, 기존 포지션 관리 최소화)
+o	Stop = Freeze + Flatten (가능하면 전량 청산/중립화) ← 가장 강력
+CIC UI 권고:
+•	“Emergency Stop”은 Red / Press&Hold + Confirm phrase(예: “STOP”) 입력 방식
+3.2 Retract (고위험 회피/철수)
+목표: “리스크 모드로 질서 있게 후퇴” (Stop과 달리 ‘운용은 지속’하되 공격성을 낮춤)
+•	즉시 수행:
+o	Risk Mode를 OFF 또는 NEUTRAL로 강등
+o	Equity Budget을 사전정의된 Retract Profile로 전환(예: 0.20~0.30)
+o	Strike=Disable, Tactical=Scale Down, Core=Partial 유지
+o	Hedge/Reserve 비중 자동 확대(정책 기반)
+CIC UI 권고:
+•	“Retract”는 Amber(주황) / 2-step Confirm
+•	누르면 “목표 노출(Exposure Target)”을 3단계로 선택:
+o	Retract-1(완만): Equity 40%→30%
+o	Retract-2(강): Equity 30%→20%
+o	Retract-3(최강): Equity 20%→10% + 방어자산 확대
+________________________________________
+4) CIC 화면 구성(정보 → 판단 → 조치) 표준 레이아웃
+4.1 상단 “상태 바”(항상 고정)
+•	MODE: M0/M1/M2/M3
+•	Risk Mode: ON / NEUTRAL / OFF
+•	System Health Index: GREEN/YELLOW/RED (0~1 수치 포함)
+•	Crisis Probability: % (그리고 추세 화살표)
+•	Data Integrity: OK/FAIL (최근 24~48h 유입 기준)
+여기서 사용자는 “현재 시스템이 안전한지/작동중인지/데이터가 들어오는지”를 3초 안에 판단.
+4.2 중앙 “전투판”(운용 현황)
+•	SAA Radar(이미 하신 섹션): 자산군/시장별 Budget & 변화
+•	Multi-Target View(군별 타겟): core/tactical/strike 감시 종목 + 배정
+•	Current Allocation %(variance_by_symbol): 종목별 비중 상위 12
+•	Orders & Fills: 최근 주문/체결/실패 (Pilot/Live에서 특히 중요)
+4.3 우측 “통제 패널”(Control Panel)
+필수 컨트롤:
+•	Mode Selector (전환은 조건 충족 시만 활성)
+•	Arm/Disarm Auto-Execution
+•	Freeze New Entries
+•	Retract
+•	Emergency Stop
+•	(Pilot 전용) “Pilot Caps” (총노출/단일종목/일일 주문수)
+4.4 하단 “설명/감사 패널”
+•	Reasoning Transparency(군별 전략 요약 + 리포트 시각)
+•	최근 Decision Object 10개(Allocation 변경, Risk Mode 변경, Retract 실행 등)
+•	Incident Log(열려있는 사고/경보)
+________________________________________
+5) 위험 예측 시 Retract 버튼 자동 제안(하지만 자동 실행은 선택)
+Private/Personal 시스템의 균형점은 보통 이렇게 잡습니다:
+•	시스템이 Retract 추천은 자동으로 띄움(프롬프트/알림)
+•	Retract 실행은 사용자 승인(기본)
+•	단, “최고 위험(예: Systemic Alarm)”에서는 자동 Retract 허용 옵션 제공
+Retract 추천 트리거(예시)
+•	Crisis Probability ≥ 0.70 and 상승 추세
+•	Vol Spike ≥ 1.8
+•	Regime Integrity < 0.5
+•	DD가 -8% 근접 + 악화 속도 빠름
+________________________________________
+6) 글로벌 금융사 Capital Robot Benchmark 관점에서의 핵심 체크리스트
+Warroom CIC는 “기계가 판단해도 인간이 책임질 수 있게” 만들어야 합니다.
+•	Mode 분리(Backtest/Paper/Pilot/Live) ← 기관급 운영의 핵심
+•	Kill Switch(Emergency Stop) ← 규제/감사/운영 안전
+•	Order Gate(Risk pre-trade) ← 자동매매 사고 방지
+•	Explainability(3줄 요약 + 근거 시각 + 입력 데이터 상태)
+•	Audit Trail(Decision/Incident/LLM usage)
+________________________________________
+7) 다음 액션(책임개발자 제안)
+CIC를 “설계”에서 “구현 가능한 명세”로 만들기 위해, 다음 3개를 바로 문서화/코드화하면 진행이 빨라집니다.
+1.	CIC Control State Machine (모드/Arm/Freeze/Retract/Stop 상태 전이표)
+2.	Safety Actions Contract (Retract/Stop이 호출하는 백엔드 단일 API 계약)
+3.	UI 컴포넌트 스펙 (상태바/전투판/통제패널/감사패널의 props와 데이터 소스)

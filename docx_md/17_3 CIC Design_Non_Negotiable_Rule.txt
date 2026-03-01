@@ -1,0 +1,127 @@
+CIC 운영 불변 규칙(Non-Negotiable Rule)
+
+📘 Warroom (CIC) Data Transparency Rule v1.0
+🔒 기본 원칙
+CIC/Dashboard에 표시되는 모든 데이터는 반드시 다음 4요소를 포함해야 한다.
+1.	실명제(Real Identity Source)
+2.	Timestamp (UTC + Local)
+3.	Refresh Rate
+4.	Data Freshness Indicator
+이 4개가 없는 데이터는 “운영 화면에 표시 금지”.
+________________________________________
+1️⃣ 실명제 (Real Identity)
+모든 데이터 블록은 반드시 출처를 실명으로 표기해야 함.
+예시
+데이터	표기 예
+Regime	Source: Regime Engine v3.4
+Crisis Probability	Source: Hybrid Model (Structured 40% + Factor 40% + LLM 20%)
+Portfolio Allocation	Source: KIS Single Account (CANO: XXXX)
+News Sentiment	Source: Alpha Vantage API
+Macro Rate	Source: FRED (DGS10)
+LLM의 경우:
+•	Source: OpenAI GPT-4.1 (REGIME_PROMPT_v2.3)
+•	Source: Gemini 1.5 (Fallback Mode)
+“LLM”이라는 모호한 표현 금지. 반드시 모델명 명시.
+________________________________________
+2️⃣ Timestamp 표기 규칙
+모든 데이터에는:
+Data Timestamp (UTC)
+Local Time (KST)
+둘 다 명기.
+예시 UI 표기
+Regime: Tapering
+Updated: 2026-03-01 09:35:12 UTC
+Local: 2026-03-01 18:35:12 KST
+________________________________________
+3️⃣ Refresh Rate 명시
+각 데이터 블록 우측 상단에 반드시:
+Refresh: 5 min
+또는
+Real-time (KIS stream)
+또는
+Hourly
+________________________________________
+4️⃣ Data Freshness Indicator (색상 규칙)
+상태	조건	색상
+Fresh	주기 이내	Green
+Stale	2× 주기 초과	Yellow
+Expired	3× 주기 초과	Red
+예:
+•	Regime refresh 5분
+•	12분 지났으면 Yellow
+•	16분 지났으면 Red
+Red 상태에서는:
+•	해당 데이터에 의존한 전략 진입 금지(Pre-Trade Gate 연동)
+________________________________________
+5️⃣ CIC UI 적용 구조
+모든 패널 공통 Header 구조
+[Panel Name]
+Source:
+Timestamp:
+Refresh:
+Freshness:
+Confidence:
+________________________________________
+예: Crisis Probability 카드
+Crisis Probability: 0.62
+Source: Hybrid Model v3.4
+Data Time (UTC): 2026-03-01 09:30:00
+Refresh: 5 min
+Freshness: GREEN
+Confidence: 0.74
+________________________________________
+6️⃣ 실명제 범위 확대
+실명제는 사람 이름이 아니라 “책임 엔진/모델 식별”을 의미.
+아래도 실명제 대상:
+•	Risk Mode 결정
+•	Allocation 변경
+•	Retract 실행
+•	Emergency Stop 실행
+•	Mode 변경
+•	Strategy Promotion
+예:
+Decision: Retract-2 Activated
+Triggered By: Self-Healing Structural Alarm
+Executed By: User (Manual)
+Timestamp: ...
+________________________________________
+7️⃣ 실명제 + Timestamp는 법적·감사 방어선
+이 구조는 다음을 방지:
+•	“언제 계산된 값인지 모르는 숫자”
+•	“이전 장 데이터로 현재 판단”
+•	“LLM hallucination이 언제 반영되었는지 모름”
+•	“누가 Stop을 눌렀는지 불명확”
+Private System이라도 책임 체계는 기관급으로 유지.
+________________________________________
+8️⃣ API 설계 반영 (중요)
+CIC용 API는 단순 값 반환 금지.
+모든 응답은 다음 구조로 반환:
+{
+  "value": 0.62,
+  "source": "Hybrid Model v3.4",
+  "timestamp_utc": "2026-03-01T09:30:00Z",
+  "refresh_interval_sec": 300,
+  "freshness_status": "GREEN",
+  "confidence": 0.74
+} Warroom 전체 Data Governance 규칙
+금지사항
+•	timestamp 없는 데이터 표시 금지
+•	source 없는 수치 표시 금지
+•	refresh interval 없는 데이터 표시 금지
+•	stale 상태인데도 진입 허용 금지
+________________________________________
+🔟 Emergency Stop과의 연동
+Data Freshness가 RED인 핵심 모듈:
+•	Regime
+•	KIS Balance
+•	Risk Engine
+•	Macro Context
+중 2개 이상이면:
+•	Auto Freeze New Entries
+•	CIC에 “DATA STALE WARNING” 표시
+________________________________________
+결론
+이 원칙을 적용하면 Warroom은:
+•	단순 Dashboard가 아니라
+•	투명한 전투지휘통제실(Command & Control Center)
+이 됩니다. 

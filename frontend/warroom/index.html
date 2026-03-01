@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Warroom CIC — Aegis-X v3</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, sans-serif; margin: 0; background: #0f1419; color: #e6edf3; -webkit-tap-highlight-color: transparent; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+    .layout { display: flex; flex-direction: column; min-height: 100vh; }
+    .header {
+      position: sticky; top: 0; z-index: 10; background: #161b22; padding: 0.5rem 1rem;
+      border-bottom: 1px solid #30363d; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+    }
+    .header h1 { margin: 0; font-size: 1.1rem; }
+    .header-block { padding: 0 0.75rem; border-right: 1px solid #30363d; }
+    .header-block:last-of-type { border-right: none; }
+    .header-block label { font-size: 0.7rem; color: #8b949e; display: block; }
+    .header-block span { font-size: 0.85rem; }
+    .controls { display: flex; gap: 0.5rem; margin-left: auto; flex-wrap: wrap; }
+    .btn { padding: 0.5rem 0.85rem; min-height: 44px; min-width: 44px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; border: 1px solid #30363d; background: #21262d; color: #e6edf3; touch-action: manipulation; }
+    .btn:hover { background: #30363d; }
+    .btn-danger { border-color: #f85149; color: #f85149; }
+    .btn-danger:hover { background: #f85149; color: #fff; }
+    .body-row { display: flex; flex: 1; min-height: 0; }
+    .left-menu {
+      width: 200px; min-width: 200px; background: #161b22; border-right: 1px solid #30363d;
+      padding: 0.5rem 0; position: sticky; left: 0; align-self: flex-start;
+    }
+    .left-menu a { display: block; padding: 0.4rem 1rem; color: #8b949e; text-decoration: none; font-size: 0.85rem; }
+    .left-menu a:hover, .left-menu a.active { color: #58a6ff; background: #21262d; }
+    .main { padding: 1rem; max-width: 1200px; flex: 1; overflow: auto; }
+    .footer {
+      position: sticky; bottom: 0; background: #161b22; padding: 0.35rem 1rem;
+      border-top: 1px solid #30363d; font-size: 0.75rem; color: #8b949e;
+    }
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+    .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem; }
+    .card h3 { margin: 0 0 0.5rem; font-size: 0.95rem; color: #58a6ff; }
+    .card .meta { font-size: 0.75rem; color: #8b949e; margin-top: 0.5rem; }
+    .card .meta span { display: block; }
+    .card .data { font-size: 0.85rem; margin-top: 0.5rem; white-space: pre-wrap; word-break: break-all; }
+    .freshness-GREEN { border-left: 4px solid #3fb950; }
+    .freshness-YELLOW { border-left: 4px solid #d29922; }
+    .freshness-RED { border-left: 4px solid #f85149; }
+    .loading { color: #8b949e; }
+    .err { color: #f85149; }
+    @media (max-width: 768px) {
+      .header { padding: 0.5rem; gap: 0.5rem; }
+      .header-block { padding: 0 0.5rem; font-size: 0.8rem; }
+      #btn-menu { display: inline-block !important; }
+      .left-menu { width: 100%; max-height: 0; overflow: hidden; transition: max-height 0.2s; border-right: none; }
+      .left-menu.open { max-height: 280px; }
+      .body-row { flex-direction: column; }
+      .main { padding: 0.5rem; max-width: 100%; }
+      .cards { grid-template-columns: 1fr; gap: 0.75rem; }
+      .card { padding: 0.75rem; }
+      .card .data { font-size: 0.75rem; }
+    }
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .left-menu { width: 160px; min-width: 160px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <header class="header">
+      <h1>Aegis-X v3 Warroom</h1>
+      <div class="header-block">
+        <label>Operation Mode</label>
+        <span id="mode">—</span>
+      </div>
+      <div class="header-block">
+        <label>Regime</label>
+        <span id="regime">—</span>
+      </div>
+      <div class="header-block">
+        <label>Health</label>
+        <span id="health-summary" class="loading">Loading…</span>
+      </div>
+      <div class="controls">
+        <button class="btn" id="btn-menu" type="button" aria-label="Menu" style="display:none;">☰</button>
+        <button class="btn" id="btn-freeze">Freeze</button>
+        <button class="btn" id="btn-retract">Retract</button>
+        <button class="btn btn-danger" id="btn-estop">Emergency Stop</button>
+      </div>
+    </header>
+    <div class="body-row">
+      <nav class="left-menu" id="left-menu">
+        <a href="#" class="active">Global Overview</a>
+        <a href="#">Battlefield</a>
+        <a href="#">Fleet</a>
+        <a href="#">Regime Intelligence</a>
+        <a href="#">Allocation Matrix</a>
+        <a href="#">Orders & Execution</a>
+        <a href="#">Risk Control</a>
+        <a href="#">AAR & Battle Reports</a>
+        <a href="#">System Control Panel</a>
+      </nav>
+      <main class="main">
+        <h2>Global Overview — Snapshot cards</h2>
+        <p class="meta">source_name, generated_at, refresh_rate_sec, freshness_status (SOO §5)</p>
+        <div id="cards" class="cards"></div>
+      </main>
+    </div>
+    <footer class="footer">
+      Footer Ticker — Incident / Alert feed (placeholder)
+    </footer>
+  </div>
+  <script>
+    const KEYS = ['engine_heartbeat','comm_health','regime_current','operation_mode','llm_status','risk_guard'];
+    const base = '';
+
+    async function fetchSnapshot(key) {
+      const r = await fetch(base + '/api/snapshot/latest?key=' + encodeURIComponent(key));
+      if (!r.ok) return { err: r.status };
+      return await r.json();
+    }
+
+    async function control(action) {
+      const url = base + '/api/control/' + action;
+      const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+      const j = await r.json().catch(() => ({}));
+      if (r.ok) alert(action + ' accepted. Check command_log.');
+      else alert(action + ' failed: ' + (j.detail || r.status));
+    }
+
+    function renderCard(key, data) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      if (data.err) {
+        card.classList.add('err');
+        card.innerHTML = '<h3>' + key + '</h3><p>Error: ' + data.err + '</p>';
+        return card;
+      }
+      card.classList.add('freshness-' + (data.freshness_status || ''));
+      card.innerHTML =
+        '<h3>' + key + '</h3>' +
+        '<div class="data">' + JSON.stringify(data.data || {}, null, 2).slice(0, 400) + '</div>' +
+        '<div class="meta">' +
+        '<span>source_name: ' + (data.source_name ?? '—') + '</span>' +
+        '<span>generated_at: ' + (data.generated_at ?? '—') + '</span>' +
+        '<span>refresh_rate_sec: ' + (data.refresh_rate_sec ?? '—') + '</span>' +
+        '<span>freshness_status: ' + (data.freshness_status ?? '—') + '</span>' +
+        '</div>';
+      return card;
+    }
+
+    async function load() {
+      const container = document.getElementById('cards');
+      container.innerHTML = '';
+      let ok = 0;
+      let regimeLabel = '—';
+      let modeLabel = '—';
+      for (const key of KEYS) {
+        const data = await fetchSnapshot(key);
+        container.appendChild(renderCard(key, data));
+        if (!data.err) {
+          ok++;
+          if (key === 'regime_current' && data.data && data.data.regime_label) regimeLabel = data.data.regime_label;
+          if (key === 'operation_mode' && data.data && data.data.mode) modeLabel = data.data.mode;
+        }
+      }
+      document.getElementById('health-summary').textContent = ok + '/' + KEYS.length;
+      document.getElementById('regime').textContent = regimeLabel;
+      document.getElementById('mode').textContent = modeLabel;
+    }
+
+    document.getElementById('btn-freeze').onclick = () => control('freeze');
+    document.getElementById('btn-retract').onclick = () => control('retract');
+    document.getElementById('btn-estop').onclick = () => control('emergency_stop');
+    var menuEl = document.getElementById('left-menu');
+    document.getElementById('btn-menu').onclick = function() { menuEl.classList.toggle('open'); };
+
+    load();
+    setInterval(load, 30000);
+  </script>
+</body>
+</html>
