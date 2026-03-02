@@ -8,7 +8,13 @@ def get_structural_trend_status(snapshot_data: dict) -> str:
     """Extract structural_trend_status from core_force_state or regime snapshot. Returns ACTIVE | BROKEN | unknown."""
     if not snapshot_data:
         return "unknown"
-    # core_force_state snapshot
+    # Spec Lock v1.0: core_force_state has "action" (ENTER|HOLD|EXIT)
+    action = snapshot_data.get("action")
+    if action == "EXIT":
+        return "BROKEN"
+    if action in ("ENTER", "HOLD"):
+        return "ACTIVE"
+    # Legacy: structural_trend_status
     s = snapshot_data.get("structural_trend_status")
     if s in ("ACTIVE", "BROKEN"):
         return s

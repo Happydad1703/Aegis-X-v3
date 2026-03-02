@@ -1,4 +1,5 @@
-# backend/app/core/db.py
+# backend/app/core/db.py — Phase 0-1: Sync + Async DB. Scripts/workers use sync; FastAPI uses async.
+# If only DATABASE_URL is set: async URL is derived (psycopg2 -> asyncpg). If only ASYNC_DATABASE_URL: sync derived.
 from __future__ import annotations
 
 import os
@@ -14,12 +15,8 @@ load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 ASYNC_DATABASE_URL = os.getenv("ASYNC_DATABASE_URL", "").strip()
 
-# -------------------------
-# Sync DB (scripts/engine)
-# -------------------------
+# Derive missing URL: only ASYNC_DATABASE_URL -> derive sync; only DATABASE_URL -> derive async
 if not DATABASE_URL and ASYNC_DATABASE_URL:
-    # If only async url exists, derive sync url
-    # postgresql+asyncpg://...  -> postgresql+psycopg2://...
     DATABASE_URL = ASYNC_DATABASE_URL.replace("+asyncpg", "+psycopg2")
 
 if not DATABASE_URL:

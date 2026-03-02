@@ -1,0 +1,8 @@
+# 포트 5433 충돌 시 사용: Docker DB를 호스트 5434에 매핑
+# 사용: docker compose -f docker-compose.yml -f docker-compose.5434.yml up -d
+# .env: DATABASE_URL=postgresql+psycopg2://postgres:2041@localhost:5434/aegisx
+#       ASYNC_DATABASE_URL=postgresql+asyncpg://postgres:2041@localhost:5434/aegisx
+services:
+  db:
+    ports:
+      - "5434:5432"

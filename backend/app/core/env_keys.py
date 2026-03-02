@@ -91,6 +91,22 @@ def get_ecos_api_key() -> Optional[str]:
     return get_api_key(ENV_ECOS_API_KEY)
 
 
+def get_naver_client_id() -> Optional[str]:
+    return get_api_key(ENV_NAVER_CLIENT_ID)
+
+
+def get_naver_client_secret() -> Optional[str]:
+    return get_api_key(ENV_NAVER_CLIENT_SECRET)
+
+
+def get_finnhub_api_key() -> Optional[str]:
+    return get_api_key(ENV_FINNHUB_API_KEY)
+
+
+def get_alpha_vantage_api_key() -> Optional[str]:
+    return get_api_key(ENV_ALPHA_VANTAGE_API_KEY)
+
+
 def get_telegram_bot_token() -> Optional[str]:
     return get_api_key(ENV_TELEGRAM_BOT_TOKEN)
 

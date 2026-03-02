@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --cic-bg: #0f1419;
+  --cic-card: #161b22;
+  --cic-border: #30363d;
+  --cic-muted: #8b949e;
+  --cic-accent: #58a6ff;
+  --cic-danger: #f85149;
+  --cic-success: #3fb950;
+  --cic-warn: #d29922;
+}
+
+body {
+  background: var(--cic-bg);
+  color: #e6edf3;
+}
+
+.freshness-green {
+  border-left: 4px solid var(--cic-success);
+}
+.freshness-yellow {
+  border-left: 4px solid var(--cic-warn);
+}
+.freshness-red {
+  border-left: 4px solid var(--cic-danger);
+}

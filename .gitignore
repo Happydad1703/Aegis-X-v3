@@ -15,3 +15,9 @@ build/
 docx_md/*.docx
 ~$*
 *.tmp
+
+# Frontend
+node_modules/
+
+# Optional / upload bundles
+Zip for Upload to OpenAI/

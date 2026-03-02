@@ -1,0 +1,37 @@
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; min-height: 100vh; }
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: #0f1419;
+  color: #e6edf3;
+  -webkit-tap-highlight-color: transparent;
+}
+.layout { display: flex; flex-direction: column; min-height: 100vh; }
+.body-row { display: flex; flex: 1; min-height: 0; }
+.main { flex: 1; padding: 1rem; overflow: auto; max-width: 1400px; }
+.card {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+.card h3 { margin: 0 0 0.5rem; font-size: 0.95rem; color: #58a6ff; }
+.card .meta { font-size: 0.75rem; color: #8b949e; margin-top: 0.5rem; }
+.card .meta span { display: block; }
+.card .data { font-size: 0.85rem; margin-top: 0.5rem; white-space: pre-wrap; word-break: break-all; }
+.freshness-GREEN { border-left: 4px solid #3fb950; }
+.freshness-YELLOW { border-left: 4px solid #d29922; }
+.freshness-RED { border-left: 4px solid #f85149; }
+.contract-break { background: #3d1f1f; border-color: #f85149; color: #f85149; }
+.btn { padding: 0.5rem 0.85rem; border-radius: 8px; font-size: 0.85rem; cursor: pointer; border: 1px solid #30363d; background: #21262d; color: #e6edf3; }
+.btn:hover:not(:disabled) { background: #30363d; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-danger { border-color: #f85149; color: #f85149; }
+.btn-danger:hover:not(:disabled) { background: #f85149; color: #fff; }
+.left-nav { width: 200px; min-width: 200px; background: #161b22; border-right: 1px solid #30363d; padding: 0.5rem 0; }
+.left-nav a { display: block; padding: 0.5rem 1rem; color: #8b949e; text-decoration: none; font-size: 0.9rem; }
+.left-nav a:hover, .left-nav a.active { color: #58a6ff; background: #21262d; }
+.overlay-yellow, .overlay-red { position: absolute; inset: 0; border-radius: 8px; pointer-events: none; }
+.overlay-yellow { background: rgba(210, 153, 34, 0.15); }
+.overlay-red { background: rgba(248, 81, 73, 0.2); }

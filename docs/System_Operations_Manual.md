@@ -1,8 +1,9 @@
-# Aegis-X v3 시스템 운용 매뉴얼
+# Aegis-X v3 시스템 운영지침서
 
-**문서 ID:** AEGIS-X-SOM-v1.0  
+**문서 ID:** AEGIS-X-SOM-v1.1  
 **프로젝트 루트:** `D:\AEGIS-X_v3`  
-**대상:** 운용자·관리자
+**대상:** 운용자·관리자  
+**참조:** Master_Process_Map.md, Verification_Playbook.md, Execution_ROE.md
 
 ---
 
@@ -45,6 +46,11 @@
    python .\scripts\debug_db_target.py
    ```
    - `current_database()` 가 `aegisx`, `to_regclass('public.engine_snapshot')` 이 존재하면 정상.
+4. **Python과 컨테이너가 다른 DB를 가리킬 때:** `debug_db_target.py`에서 테이블이 없다고 나오면, **DATABASE_URL이 가리키는 DB**에 직접 스키마를 적용:
+   ```powershell
+   python .\scripts\migrate_db_via_url.py
+   ```
+   동일한 `db/migrations/` SQL을 DATABASE_URL 기준으로 적용하므로, 앱과 동일한 DB가 마이그레이션됩니다.
 
 ### 2.2 환경변수(.env / Windows)
 - **DB 연결:** 루트에 `.env` 생성 또는 Windows 환경변수에 설정.
@@ -53,13 +59,17 @@
 - **API 키·Push:** 외부 연동·Telegram 알림용 키는 **Windows 11 환경변수**에만 설정.  
   상세: [ENV_Windows11_API_Keys.md](./ENV_Windows11_API_Keys.md)
 
-### 2.3 바탕화면·툴바 바로가기
-- 바탕화면에 **Aegis-X v3 Warroom** 바로가기 생성:
+### 2.3 바탕화면·툴바 실행 아이콘
+- 바탕화면에 **실행 아이콘** 생성 (프로젝트 루트에서 실행):
   ```powershell
   cd D:\AEGIS-X_v3
   .\scripts\Create_Desktop_Shortcut.bat
   ```
-- 생성된 **Aegis-X v3 Warroom.bat** 을 우클릭 → **작업 표시줄에 고정** 하면 툴바에서 실행 가능.
+- 생성되는 항목:
+  - **Aegis-X v3 Warroom.bat** — 더블클릭 시 Backend 기동 후 브라우저에서 Warroom/Launcher 열림.
+  - **Aegis-X v3 실행.lnk** — 동일 동작의 바로가기 아이콘(.lnk).
+- 아이콘 우클릭 → **작업 표시줄에 고정** 하면 툴바에서 한 번에 실행 가능.
+- 프로젝트 경로가 `D:\AEGIS-X_v3` 가 아니어도, 스크립트가 위치한 폴더 기준으로 자동 인식됩니다.
 
 ---
 
@@ -125,11 +135,14 @@
 - **푸터:** 티커·알림 영역.
 
 ### 4.3 제어 동작 (우선순위 준수)
-- **우선순위:** Emergency Stop > Retract > Operation Mode > 전략/실행.
-- **Freeze:** 신규 진입 차단. Warroom에서 클릭 시 `command_log` 기록 및 Telegram 등 Push 발송(설정 시).
-- **Retract:** 리스크 축소·청산 권고. 동일하게 로그·Push.
-- **Emergency Stop:** 최우선 정지. 동일하게 로그·Push.
-- Mode 변경은 `POST /api/control/mode` (Backtest / Paper / Pilot / Live 등)로 수행.
+- **우선순위:** Emergency Stop > Retract > Operation Mode > 전략/실행. (SE-50 Gate 체인)
+- **단일 명령 진입로:** 모든 제어는 `POST /api/control/command` 로만 수행. 허용 명령: `EMERGENCY_STOP`, `RETRACT`, `SET_MODE`, `RUN_ENGINE_CYCLE`.
+- **Emergency Stop:** 최우선 정지. `command_type: "EMERGENCY_STOP"`, payload `{ "reason": "..." }`.
+- **Retract:** 리스크 축소. `command_type: "RETRACT"`.
+- **SET_MODE:** `command_type: "SET_MODE"`, payload `{ "mode": "PAPER" }` (BACKTEST | PAPER | PILOT | FULL_LIVE).
+- **RUN_ENGINE_CYCLE:** 엔진 1회 사이클 수동 실행.
+- Gate 상태 조회: `GET /api/control/state` → `emergency_stop`, `retract` (DB 기반).
+- (레거시) `POST /api/control/mode`, `POST /api/control/emergency_stop`, `POST /api/control/retract` 도 지원.
 
 ---
 
@@ -137,18 +150,18 @@
 
 | 스크립트 | 용도 |
 |----------|------|
-| `Create_Desktop_Shortcut.bat` | 바탕화면에 Aegis-X v3 Warroom.bat 생성 |
-| `Start_AegisX_With_Browser.bat` | Backend 기동(미기동 시) 후 브라우저로 런처 열기 |
-| `Start_AegisX_Launcher.bat` | 브라우저만 런처로 열기 (Backend는 별도 기동) |
-| `run_api.ps1` | FastAPI 서버 기동 (0.0.0.0:8000) |
-| `migrate_db.ps1` | DB 마이그레이션 적용 (001, 002 순) |
-| `run_engine_worker.ps1` | 엔진 1회 사이클 실행 |
-| `run_engine_cycle.py` | 엔진 1회 사이클 (Python 직접 호출) |
-| `run_ingest_cycle.py` | Ingest 1회 사이클 |
-| `run_wsl_terminal.bat` | WSL/Windows Terminal 실행 |
-| `debug_db_target.py` | Python이 접속하는 DB·테이블 확인 |
-| `check_comm.py` | 외부 API(FRED, OpenAI, Gemini, KIS 등) 통신 확인 |
-| `internal_simulation.py` | 아키텍처·스냅샷 키 등 내부 시뮬레이션 점검 |
+| `scripts/migrate_db.ps1` | DB 마이그레이션 적용 (001~004, PowerShell 파이프 사용) |
+| `scripts/debug_db_target.py` | 접속 DB·테이블·engine_snapshot 존재 확인 |
+| `scripts/run_engine_cycle.py` | 엔진 1회 사이클 (스냅샷 기록) |
+| `scripts/run_engine_worker.ps1` | 엔진 1회 사이클 래퍼 (프로젝트 루트에서 실행) |
+| `scripts/verify_snapshot_keys.py` | 필수 스냅샷 키 존재 여부 검증 |
+| `scripts/validate_phase0_1.ps1` | Phase 0-1 통합 검증 (docker→migrate→debug→cycle→verify→pytest) |
+| `scripts/run_ingest_cycle.py` | Ingest 1회 사이클 (ext_event_raw 수집) |
+| `scripts/run_engine_comm_check.py` | 엔진·스냅샷·외부 통신 점검 |
+| `run_api.ps1` / Backend | FastAPI 서버 (0.0.0.0:8000), /api/snapshot/*, /api/control/*, /warroom |
+| `Create_Desktop_Shortcut.bat` | 바탕화면 Warroom 바로가기 |
+| `Start_AegisX_With_Browser.bat` | Backend 기동 후 브라우저 런처 |
+| `check_comm.py` | 외부 API 통신 확인 |
 
 ---
 
@@ -179,26 +192,34 @@
 
 ---
 
-## 8. 검증·품질 관문
+## 8. 검증·품질 관문 (실행안정성 검증)
 
-### 8.1 시스템 전체 실행 안정성 점검
-- **한 번에 실행:**
-  ```powershell
-  cd D:\AEGIS-X_v3
-  powershell -ExecutionPolicy Bypass -File .\scripts\Run_Stability_Check.ps1
-  ```
-- **점검 항목:** Docker DB 기동, 마이그레이션, 테이블 존재, Python DB 진단, 엔진 1사이클, 스냅샷 적재(최근 5분 6건 이상), 계약 테스트(5개), 내부 시뮬레이션, 외부 통신(check_comm).
-- **전체 통과 조건:** 9/9. 계약 테스트 중 `test_engine_loop` 통과에는 **asyncpg** 설치 필요 (`pip install asyncpg`). 엔진/스냅샷 실패 시 `.env`의 `DATABASE_URL`과 마이그레이션 대상 DB가 동일한지 확인.
-- **결과 분석·후속조치:** [Stability_Check_Result_and_Followup.md](./Stability_Check_Result_and_Followup.md) 참조.
-- **자체 해결 불가 사항 보고:** [Stability_Check_Report_Unresolvable.md](./Stability_Check_Report_Unresolvable.md) — 포트 충돌 등 환경 이슈 정리.
+### 8.1 실행안정성 검증 절차 (권장 순서)
+다음 순서로 수행 시 **시스템 실행안정성**을 확인할 수 있다. 상세: [Verification_Playbook.md](./Verification_Playbook.md).
 
-### 8.2 계약 테스트만 수동 실행
-- **계약 테스트 (3원칙·엔진 무결성):**
-  ```powershell
-  cd D:\AEGIS-X_v3
-  pytest backend/tests/test_contract_api_db_only_read.py backend/tests/test_contract_ui_never_calls_compute.py backend/tests/test_contract_single_write_path.py backend/tests/test_contract_engines_purity.py backend/tests/test_engine_loop.py -v
-  ```
-- **실행 순서 요약:** [Phase0_1_Run_Checklist.md](./Phase0_1_Run_Checklist.md) 참조.
+1. **인프라** — Docker 기동, 컨테이너 `aegisx-db` 확인  
+   `docker ps`
+2. **마이그레이션** — DDL 적용  
+   `.\scripts\migrate_db.ps1`
+3. **DB 타깃** — 접속 DB·engine_snapshot 테이블 확인  
+   `python scripts\debug_db_target.py`
+4. **엔진 1사이클** — 스냅샷 기록  
+   `python scripts\run_engine_cycle.py`
+5. **스냅샷 키** — 필수 키 존재 확인  
+   `python scripts\verify_snapshot_keys.py`
+6. **단위·통합 테스트** — 엔진 순수성, 게이트 우선순위, 주문 상태 전이 등  
+   `pytest backend/tests/test_engine_loop.py backend/tests/test_gates.py backend/tests/test_execution_contract.py backend/tests/test_combat_force_spec_lock.py backend/tests/test_combat_system_lock.py backend/tests/test_combat_integration.py -v`
+7. **원샷 하니스** — 위 1~6을 한 번에 실행  
+   `.\scripts\validate_phase0_1.ps1`
+
+**통과 조건:** 1~5 성공, 6에서 DB 의존 테스트는 스킵 가능(DB 미기동 시). 7은 DB+마이그레이션 선행 필요.  
+**검증 결과 보고:** [Execution_Stability_Verification_Report.md](./Execution_Stability_Verification_Report.md) 참조.
+
+### 8.2 DB 없이 실행 가능한 검증
+- **엔진 순수성·게이트·주문 상태:**  
+  `pytest backend/tests/test_execution_contract.py backend/tests/test_gates.py backend/tests/test_combat_force_spec_lock.py backend/tests/test_combat_system_lock.py -v`  
+  (일부 test_gates는 system_config 테이블 필요 시 스킵)
+- **계약 테스트 전체:** DB·asyncpg 준비 후 [Phase0_1_Run_Checklist.md](./Phase0_1_Run_Checklist.md) 또는 [Verification_Playbook.md](./Verification_Playbook.md) 실행.
 
 ---
 
@@ -206,12 +227,15 @@
 
 | 문서 | 내용 |
 |------|------|
-| [ENV_Windows11_API_Keys.md](./ENV_Windows11_API_Keys.md) | 환경변수·API 키 목록 및 통신 확인 |
-| [Launcher_and_Remote_Access.md](./Launcher_and_Remote_Access.md) | 런처·원격·모바일·Push 상세 |
+| [Verification_Playbook.md](./Verification_Playbook.md) | 셀프 검증 스크립트·pytest·Run Checklist |
+| [Execution_Stability_Verification_Report.md](./Execution_Stability_Verification_Report.md) | 실행안정성 검증 결과 보고 |
+| [Execution_ROE.md](./Execution_ROE.md) | 실행 규칙(Gate 우선순위, Mode, 주문 상태 전이) |
+| [Master_Process_Map.md](./Master_Process_Map.md) | 프로세스 맵 단일 소스 |
+| [ARCHITECTURE_AUDIT_REPORT.md](./ARCHITECTURE_AUDIT_REPORT.md) | 아키텍처 감사 결과 |
 | [Phase0_1_Run_Checklist.md](./Phase0_1_Run_Checklist.md) | Phase 0-1 실행 체크리스트 |
-| [Cursor_SOO_Phase0_1.md](./Cursor_SOO_Phase0_1.md) | 표준 운영 규칙(SOO)·아키텍처 락 |
+| [ENV_Windows11_API_Keys.md](./ENV_Windows11_API_Keys.md) | 환경변수·API 키 |
 | [SE_Master_Index.md](./SE_Master_Index.md) | SE 문서 인덱스 |
 
 ---
 
-*문서 버전: 1.0 | 프로젝트 루트: D:\AEGIS-X_v3*
+*문서 버전: 1.1 | 프로젝트 루트: D:\AEGIS-X_v3*

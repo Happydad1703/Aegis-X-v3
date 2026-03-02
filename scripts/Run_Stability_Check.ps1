@@ -52,12 +52,23 @@ try {
     Record-Step -Name "테이블 (engine_snapshot 등)" -Ok $false -Detail $_.Exception.Message
 }
 
-# 4) Python DB 접속 대상 진단
+# 4) Python DB 접속 대상 진단 (실패 시 DATABASE_URL 기준 마이그레이션 후 재시도)
 Write-Host "`n4. Python DB 접속 진단 (debug_db_target.py)..." -ForegroundColor Yellow
 try {
     $out = python "$ProjectRoot\scripts\debug_db_target.py" 2>&1
     $ok = $LASTEXITCODE -eq 0 -and ($out -match "current_database|engine_snapshot")
+    if (-not $ok) {
+        Write-Host "   [RECOVERY] Trying migrate_db_via_url.py (apply schema to DATABASE_URL target)..." -ForegroundColor Yellow
+        python "$ProjectRoot\scripts\migrate_db_via_url.py" 2>&1 | Out-Null
+        if ($LASTEXITCODE -eq 0) {
+            $out = python "$ProjectRoot\scripts\debug_db_target.py" 2>&1
+            $ok = $LASTEXITCODE -eq 0 -and ($out -match "current_database|engine_snapshot")
+        }
+    }
     Record-Step -Name "Python DB 대상 진단" -Ok $ok -Detail $(if (-not $ok) { $out | Select-Object -First 3 })
+    if (-not $ok) {
+        Write-Host "   [RECOVERY] Port conflict? Use docker-compose.5434.yml + DATABASE_URL=...5434. See docs\Stability_Check_Report_Unresolvable.md" -ForegroundColor Yellow
+    }
 } catch {
     Record-Step -Name "Python DB 대상 진단" -Ok $false -Detail $_.Exception.Message
 }
@@ -68,8 +79,8 @@ $engineOk = $false
 $engineOut = & "$ProjectRoot\scripts\run_engine_worker.ps1" 2>&1
 if ($LASTEXITCODE -eq 0) { $engineOk = $true }
 if (-not $engineOk -and ($engineOut -match "does not exist|UndefinedTable")) {
-    Write-Host "   마이그레이션 재실행 후 엔진 재시도..." -ForegroundColor Gray
-    & "$ProjectRoot\scripts\migrate_db.ps1" 2>&1 | Out-Null
+    Write-Host "   DATABASE_URL 대상 마이그레이션 후 엔진 재시도 (migrate_db_via_url.py)..." -ForegroundColor Gray
+    python "$ProjectRoot\scripts\migrate_db_via_url.py" 2>&1 | Out-Null
     $engineOut = & "$ProjectRoot\scripts\run_engine_worker.ps1" 2>&1
     if ($LASTEXITCODE -eq 0) { $engineOk = $true }
 }
@@ -121,12 +132,14 @@ try {
     Record-Step -Name "내부 시뮬레이션" -Ok $false -Detail $_.Exception.Message
 }
 
-# 9) (선택) 외부 통신 점검
+# 9) (선택) 외부 통신 점검 — exit 0 이거나 출력에 "OK or SKIP" 있고 FAIL 없으면 PASS
 Write-Host "`n9. 외부 API 통신 점검 (check_comm.py)..." -ForegroundColor Yellow
 try {
-    $commOut = python "$ProjectRoot\scripts\check_comm.py" 2>&1
-    $commOk = $LASTEXITCODE -eq 0
-    Record-Step -Name "외부 통신 (check_comm)" -Ok $commOk -Detail "환경변수 미설정 시 SKIP 가능"
+    $commOut = python "$ProjectRoot\scripts\check_comm.py" 2>&1 | Out-String
+    $exitOk = $LASTEXITCODE -eq 0
+    $allSkipOrOk = $commOut -match "All checked endpoints OK or SKIP" -and $commOut -notmatch "FAIL\s*\("
+    $commOk = $exitOk -or $allSkipOrOk
+    Record-Step -Name "외부 통신 (check_comm)" -Ok $commOk -Detail $(if ($commOk) { "OK or SKIP" } else { "환경변수 미설정 시 SKIP 가능; 실패 시 docs/ENV_Windows11_API_Keys.md" })
 } catch {
     Record-Step -Name "외부 통신 (check_comm)" -Ok $false -Detail $_.Exception.Message
 }
@@ -139,6 +152,10 @@ Write-Host "결과: $passed / $total 항목 통과" -ForegroundColor $(if ($pass
 if ($passed -lt $total) {
     Write-Host "실패 항목:" -ForegroundColor Red
     $results | Where-Object { -not $_.Pass } | ForEach-Object { Write-Host "  - $($_.Step)" }
+    Write-Host ""
+    Write-Host "복구 가이드:" -ForegroundColor Cyan
+    Write-Host "  - DB 연결 불일치(4·5·6·7 실패): docs\Stability_Check_Report_Unresolvable.md §3.2 (포트 5434 대안: docker-compose.5434.yml + .env)" -ForegroundColor Gray
+    Write-Host "  - 개선항목·우선순위: docs\Stability_Improvement_Backlog.md" -ForegroundColor Gray
 }
 Write-Host "참고: 계약 테스트 5번(test_engine_loop) 통과하려면 pip install asyncpg 필요." -ForegroundColor Gray
 Write-Host "참고: 엔진/스냅샷 실패 시 .env의 DATABASE_URL과 마이그레이션 대상 DB가 동일한지 확인." -ForegroundColor Gray

@@ -1,9 +1,10 @@
 # api/cic.py — SE-45, SE-65: snapshot_key 기반 Read-only API (DB-Only Read)
-# 원칙 1: engine_snapshot 테이블만 조회, 직접 계산 금지
+# 원칙 1: engine_snapshot / order_log / incident_log 조회만, 직접 계산 금지
 
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.core.db import get_db
@@ -53,3 +54,69 @@ async def get_snapshot_latest(
         "refresh_rate_sec": row["refresh_rate_sec"],
         "freshness_status": row["freshness_status"],
     }
+
+
+@router.get("/orders")
+async def get_orders(
+    limit: int = Query(50, ge=1, le=200),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """GET /api/orders — Read-only order_log (UI reads ONLY from DB)."""
+    try:
+        result = await db.execute(
+            text("""
+                SELECT id, symbol, side, quantity, mode, execution_status, execution_payload, created_at
+                FROM order_log
+                ORDER BY id DESC
+                LIMIT :limit
+            """),
+            {"limit": limit},
+        )
+        rows = result.mappings().all()
+    except Exception:
+        return {"items": [], "meta": {"source": "order_log"}}
+    items = []
+    for r in rows:
+        items.append({
+            "id": r["id"],
+            "symbol": r["symbol"],
+            "side": r["side"],
+            "quantity": float(r["quantity"]) if r["quantity"] is not None else 0,
+            "mode": r["mode"],
+            "execution_status": r["execution_status"],
+            "execution_payload": r["execution_payload"],
+            "created_at": r["created_at"].isoformat() if r["created_at"] else None,
+        })
+    return {"items": items, "meta": {"source": "order_log"}}
+
+
+@router.get("/incidents")
+async def get_incidents(
+    limit: int = Query(50, ge=1, le=200),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """GET /api/incidents — Read-only incident_log (UI reads ONLY from DB)."""
+    try:
+        result = await db.execute(
+            text("""
+                SELECT id, severity, category, message, related_snapshot_key, created_at
+                FROM incident_log
+                ORDER BY id DESC
+                LIMIT :limit
+            """),
+            {"limit": limit},
+        )
+        rows = result.mappings().all()
+    except Exception:
+        return {"items": [], "meta": {"source": "incident_log"}}
+    items = []
+    for r in rows:
+        items.append({
+            "id": r["id"],
+            "severity": r["severity"],
+            "category": r["category"],
+            "message": r["message"],
+            "related_snapshot_key": r["related_snapshot_key"],
+            "created_at": r["created_at"].isoformat() if r["created_at"] else None,
+        })
+    return {"items": items, "meta": {"source": "incident_log"}}

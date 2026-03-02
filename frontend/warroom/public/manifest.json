@@ -1,0 +1,10 @@
+{
+  "name": "Aegis-X V3 Warroom",
+  "short_name": "Warroom",
+  "description": "CIC Dashboard. DB-Only Read.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f1419",
+  "theme_color": "#161b22",
+  "orientation": "any"
+}

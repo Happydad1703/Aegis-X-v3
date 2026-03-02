@@ -1,29 +1,64 @@
-# engines/core_engine.py — CoreForce_Structural_Trend_Mapping: pure dict in → core_force_state out. SE-50 Wide Stop.
+# engines/core_engine.py — Spec Lock v1.0: Core Engine Contract. PURE dict in → dict out.
+# NO DB, NO API, NO env, NO datetime, NO randomness.
+# 수식 Lock: ENTER iff regime in {Goldilocks,Bull} & ma60>ma120 & ma120_slope>0 & RS_rank ≤ 20%;
+#            EXIT iff ma60<ma120 OR regime==Crisis; stop_loss = -0.20.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+# --- Spec Lock v1.0 constants (변경 시 SE 승인 필요) ---
+CORE_STOP_LOSS = -0.20  # wide structural
+RS_ENTER_CAP = 0.20     # relative_strength_rank ≤ 20% for ENTER
+ENTER_REGIMES = frozenset({"Goldilocks", "Bull"})
 
 
 def compute_core_force(core_input: dict) -> dict:
     """
-    Pure: core_input (regime, battlefield_state, allocation_matrix, fleet_budget, risk_guard, macro_context)
-    → core_output (structural_trend_status, trade_signal, core_weight_delta, promotion_list, meta).
+    Pure: Core Engine Contract (Spec Lock v1.0).
+    Input: regime, crisis_prob, price, ma60, ma120, ma120_slope, relative_strength_rank, current_position
+    Output: action ("HOLD"|"ENTER"|"EXIT"), target_weight, stop_loss, reason
     """
-    battlefield = core_input.get("battlefield_state") or {}
-    regime = core_input.get("regime_current") or {}
-    ma60 = battlefield.get("ma60") or 0.0
-    ma120 = battlefield.get("ma120") or 0.0
-    ma120_slope = battlefield.get("ma120_slope") or 0.0
-    trend_ok = ma60 > ma120 and ma120_slope > 0
-    structural_trend_status = "ACTIVE" if trend_ok else "BROKEN"
-    trade_signal = "HOLD" if trend_ok else "REVIEW"
-    growth = core_input.get("portfolio_growth_rate") or 0.0
-    core_weight_delta = 0.01 if growth > 0.05 else 0.0
+    regime = (core_input.get("regime") or "").strip()
+    crisis_prob = float(core_input.get("crisis_prob", 0))
+    ma60 = float(core_input.get("ma60", 0))
+    ma120 = float(core_input.get("ma120", 0))
+    ma120_slope = float(core_input.get("ma120_slope", 0))
+    rs_rank = float(core_input.get("relative_strength_rank", 1.0))
+    current_position = float(core_input.get("current_position", 0))
+
+    # EXIT 우선: ma60 < ma120 OR regime == "Crisis"
+    if ma60 < ma120:
+        return {
+            "action": "EXIT",
+            "target_weight": 0.0,
+            "stop_loss": CORE_STOP_LOSS,
+            "reason": "ma60 < ma120",
+        }
+    if regime == "Crisis":
+        return {
+            "action": "EXIT",
+            "target_weight": 0.0,
+            "stop_loss": CORE_STOP_LOSS,
+            "reason": "regime Crisis",
+        }
+
+    # ENTER: regime in {Goldilocks, Bull}, ma60 > ma120, ma120_slope > 0, RS_rank ≤ 20%
+    if (
+        regime in ENTER_REGIMES
+        and ma60 > ma120
+        and ma120_slope > 0
+        and rs_rank <= RS_ENTER_CAP
+    ):
+        return {
+            "action": "ENTER",
+            "target_weight": 0.25,
+            "stop_loss": CORE_STOP_LOSS,
+            "reason": "trend_ok_rs_ok",
+        }
+
+    # HOLD
     return {
-        "structural_trend_status": structural_trend_status,
-        "trade_signal": trade_signal,
-        "core_weight_delta": core_weight_delta,
-        "promotion_list": [],
-        "meta": {"source_name": "core_engine", "refresh_rate_sec": 3600, "ts_utc": datetime.now(timezone.utc).isoformat()},
+        "action": "HOLD",
+        "target_weight": current_position,
+        "stop_loss": CORE_STOP_LOSS,
+        "reason": "conditions_not_met",
     }

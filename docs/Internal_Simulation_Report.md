@@ -1,6 +1,6 @@
 # Aegis-X v3 Internal Simulation Report
 
-**Generated**: 2026-03-01T17:12:48Z (UTC)
+**Generated**: 2026-03-02T11:10:03Z (UTC)
 
 기준: docs/64_Phase0_1, 65_Final_Directory_Architecture_Lock, 43_DB_Schema, 14_TVP
 

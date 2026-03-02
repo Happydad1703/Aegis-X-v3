@@ -1,0 +1,4 @@
+# Aegis-X V3 Frontend — SE Hard Locks
+# DB-Only Read: UI renders only API snapshot/read-only results; no computation of regime/risk/allocation/targets.
+# Single Write Path: State changes only via Control API (command/mode/E-Stop/Retract); no direct DB write.
+# Safety Priority: EmergencyStop > Retract > Mode > Strategy; always visible and immediately accessible.

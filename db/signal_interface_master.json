@@ -1,0 +1,147 @@
+{
+  "version": "1.0",
+  "description": "AEGIS-X v3 Signal Interface Master — Schema, DB, module I/O. 시스템 폴트 방지용 단일 정본.",
+  "tables": {
+    "ext_event_raw": {
+      "purpose": "외부 이벤트 수집 원시",
+      "columns": ["id", "event_type", "source_name", "payload", "received_at"],
+      "write_by": ["event_repo", "ingest_worker"],
+      "read_by": ["engine_worker", "regime_engine inputs"]
+    },
+    "engine_snapshot": {
+      "purpose": "엔진 결과 SSOT. UI/API는 이 테이블만 조회.",
+      "columns": ["id", "snapshot_key", "snapshot_data", "freshness_status", "source_name", "refresh_rate_sec", "generated_at"],
+      "write_by": ["snapshot_repo only"],
+      "read_by": ["cic API", "Warroom", "health endpoint", "gates", "engine_worker for inputs"]
+    },
+    "system_mode": {
+      "purpose": "BACKTEST | PAPER | PILOT | FULL_LIVE",
+      "columns": ["id", "mode", "changed_by", "changed_at"],
+      "write_by": ["command_repo", "control API mode"],
+      "read_by": ["mode_gate", "execution"]
+    },
+    "system_config": {
+      "purpose": "키-값 설정 (pilot_config, lks_last_known_strategy 등)",
+      "columns": ["id", "config_key", "config_value", "updated_by", "updated_at"],
+      "write_by": ["config_service", "llm_gateway record_lks"],
+      "read_by": ["config_service", "llm_gateway get_lks", "engine_worker"]
+    },
+    "incident_log": {
+      "purpose": "사고/이벤트 로그",
+      "columns": ["id", "severity", "category", "message", "related_snapshot_key", "created_at"],
+      "write_by": ["incident_repo", "llm_gateway on_blackout"],
+      "read_by": ["ops", "reports"]
+    },
+    "command_log": {
+      "purpose": "명령 로그 (freeze, retract, emergency_stop, mode)",
+      "columns": ["id", "command_type", "issued_by", "command_payload", "status", "created_at"],
+      "write_by": ["command_repo", "control API"],
+      "read_by": ["ops", "audit"]
+    },
+    "order_log": {
+      "purpose": "주문 실행 이력",
+      "columns": ["id", "symbol", "side", "quantity", "mode", "execution_status", "execution_payload", "created_at"],
+      "write_by": ["order_repo only", "paper_executor", "kis_executor"],
+      "read_by": ["ops", "reports"]
+    }
+  },
+  "snapshot_keys": {
+    "allowed": [
+      "engine_heartbeat",
+      "comm_health",
+      "regime_current",
+      "operation_mode",
+      "llm_status",
+      "risk_guard",
+      "allocation_matrix",
+      "fleet_budget_snapshot",
+      "core_force_state",
+      "active_session",
+      "session_state",
+      "timezone",
+      "usd_exposure_status"
+    ],
+    "source_module": {
+      "engine_heartbeat": "engine_worker",
+      "comm_health": "engine_worker",
+      "regime_current": "regime_engine",
+      "operation_mode": "engine_worker",
+      "llm_status": "engine_worker",
+      "risk_guard": "engine_worker",
+      "allocation_matrix": "allocation_engine",
+      "fleet_budget_snapshot": "fleet_budget_engine",
+      "core_force_state": "core_engine"
+    }
+  },
+  "module_signals": [
+    {
+      "module": "ingest_worker",
+      "inputs": ["external API (FRED, heartbeat)"],
+      "outputs": ["ext_event_raw via event_repo"],
+      "interface_contract": "event_type, source_name, payload JSONB"
+    },
+    {
+      "module": "regime_engine",
+      "inputs": ["events_count", "trend_score", "volatility_state (from DB/worker)"],
+      "outputs": ["regime_label", "crisis_probability", "trend_score", "volatility_state", "confidence_score", "generated_inputs_hash", "computed_at_utc"],
+      "writes_to": "engine_snapshot.snapshot_key=regime_current via snapshot_repo"
+    },
+    {
+      "module": "allocation_engine",
+      "inputs": ["regime (regime_current snapshot_data)"],
+      "outputs": ["base_weights", "regime_label", "crisis_probability", "formula"],
+      "writes_to": "engine_snapshot.snapshot_key=allocation_matrix via snapshot_repo"
+    },
+    {
+      "module": "fleet_budget_engine",
+      "inputs": ["allocation (allocation_matrix)", "pilot_config (optional)"],
+      "outputs": ["weights", "regime_label"],
+      "writes_to": "engine_snapshot.snapshot_key=fleet_budget_snapshot via snapshot_repo"
+    },
+    {
+      "module": "core_engine",
+      "inputs": ["regime_current", "battlefield_state", "allocation_matrix", "fleet_budget_snapshot", "risk_guard", "macro_context", "portfolio_growth_rate"],
+      "outputs": ["structural_trend_status", "trade_signal", "core_weight_delta", "promotion_list", "meta"],
+      "writes_to": "engine_snapshot.snapshot_key=core_force_state via snapshot_repo"
+    },
+    {
+      "module": "pre_trade_gate",
+      "inputs": ["core_force_state snapshot_data", "regime_current snapshot_data (fallback)"],
+      "outputs": ["allow_trade bool", "reasons list"],
+      "writes_to": "none (stateless)"
+    },
+    {
+      "module": "engine_worker",
+      "inputs": ["ext_event_raw (count)", "DB session"],
+      "outputs": ["writes all snapshot_keys via snapshot_repo", "audit_chain regime/allocation"]
+    },
+    {
+      "module": "cic API",
+      "inputs": ["engine_snapshot read only"],
+      "outputs": ["GET /api/snapshot/{key}", "GET /api/snapshot/latest?key="],
+      "contract": "snapshot_key must be in ALLOWED_SNAPSHOT_KEYS"
+    },
+    {
+      "module": "llm_gateway",
+      "inputs": ["role", "task_type", "payload", "db optional"],
+      "outputs": ["result with provider_used or LKS on blackout"],
+      "writes_to": "incident_log on_blackout, system_config for LKS"
+    }
+  ],
+  "api_endpoints": {
+    "GET /api/snapshot/{snapshot_key}": {"read": "engine_snapshot", "key_whitelist": "snapshot_keys.allowed"},
+    "GET /api/snapshot/latest?key=": {"read": "engine_snapshot", "key_whitelist": "snapshot_keys.allowed"},
+    "GET /api/health": {"read": "engine_snapshot (engine_heartbeat, comm_health)"},
+    "POST /api/control/mode": {"write": "command_log", "audit_chain": "mode"},
+    "POST /api/control/freeze": {"write": "command_log", "audit_chain": "freeze"},
+    "POST /api/control/retract": {"write": "command_log", "audit_chain": "retract"},
+    "POST /api/control/emergency_stop": {"write": "command_log", "audit_chain": "emergency_stop"}
+  },
+  "single_write_path": {
+    "engine_snapshot": "snapshot_repo only",
+    "ext_event_raw": "event_repo only",
+    "command_log": "command_repo only",
+    "order_log": "order_repo only",
+    "incident_log": "incident_repo only"
+  }
+}

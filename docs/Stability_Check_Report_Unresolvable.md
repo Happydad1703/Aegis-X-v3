@@ -55,7 +55,7 @@
 |------|------|
 | **A. 로컬 PostgreSQL 중지 또는 포트 변경** | 호스트에 설치된 PostgreSQL이 5433을 쓰고 있다면, 해당 서비스를 중지하거나 다른 포트(예: 5432)로 옮긴 뒤, Docker만 5433을 쓰도록 함. |
 | **B. Docker가 5433을 쓰도록 확인** | `docker compose up -d` 후 `docker port aegisx-db`로 5433이 컨테이너에 매핑되는지 확인. 이미 다른 프로세스가 5433을 점유 중이면 Docker는 5433에 바인드되지 않을 수 있음. |
-| **C. 포트를 나누어 사용** | 로컬 PostgreSQL을 5433에 유지할 경우, `docker-compose.yml`에서 호스트 포트를 **5434** 등으로 변경하고, `.env`의 `DATABASE_URL`을 `localhost:5434`로 수정. 그러면 Python은 컨테이너(5434)만 바라보게 됨. |
+| **C. 포트를 나누어 사용** | 로컬 PostgreSQL을 5433에 유지할 경우, **`docker-compose.5434.yml`** 사용: `docker compose -f docker-compose.yml -f docker-compose.5434.yml up -d` 후 `.env`의 `DATABASE_URL`·`ASYNC_DATABASE_URL`을 `localhost:5434`로 수정. 그러면 Python은 컨테이너(5434)만 바라보게 됨. (`.env.example`에 주석으로 안내됨.) |
 
 **확인 방법 (PowerShell):**
 ```powershell

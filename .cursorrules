@@ -4,6 +4,7 @@
 3) DB writes ONLY via snapshot_repo / repo modules (single write path).
 4) Safety priority: EmergencyStop > Retract > Mode > Strategy.
 5) Every displayed datum must include source(real-name), timestamp, refresh_rate metadata.
+6) Zero-Flash: location.reload() / window.location.reload() 금지. 부분 갱신만 fetch 또는 axios로 수행.
 
 ---
 Full: docs/Cursor_Developer_Mode_Hard_Lock.md | SOO: docs/Cursor_SOO_Phase0_1.md | Guardrails: docs/Cursor_Guardrails_SE_Enforcement.md | Context: docs/Context_Summary_For_New_Chat.md

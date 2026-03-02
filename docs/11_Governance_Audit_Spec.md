@@ -38,9 +38,24 @@ ________________________________________
 4.1 Append-Only Ledger
 •	모든 Decision Object는 append-only 저장
 •	삭제·수정 금지
-4.2 Hash Chain 구조
-previous_hash → current_hash
-변조 시 체인 붕괴.
+4.2 Hash Chain 구조 (Immutable Hash Chain)
+• **previous_hash → current_hash**: 각 이벤트는 `prev_hash`로 이전 레코드와 연결. 위변조 시 해시 불일치로 검출.
+• **저장소**: `ssot/audit_chain.jsonl` (append-only). 구현: `backend/app/core/audit_chain.py` — `append_audit_event(event_type, payload, payload_preview)`.
+• **레코드 형식** (11_Governance AegisX_SE_Documentation_Sets_v1.0):
+```json
+{
+  "ts_utc": "ISO8601",
+  "event_type": "regime|kill_switch|strategy_sync|allocation|emergency_stop|freeze|retract|mode|...",
+  "payload_hash": "sha256 hex",
+  "prev_hash": "sha256 hex (이전 레코드의 self_hash, 최초는 genesis)",
+  "self_hash": "sha256 hex (본 레코드 해시)",
+  "payload_preview": "요약 텍스트(선택, 200자)"
+}
+```
+• **self_hash** = SHA256(ts_utc + "|" + event_type + "|" + payload_hash + "|" + prev_hash).
+• **기록 대상**: 국면 판정(regime), 할당(allocation), Freeze/Retract/Emergency Stop, Mode 변경 등 핵심 결심. Control API 및 Engine Worker에서 호출.
+• **활성화**: 환경변수 `AUDIT_CHAIN_ENABLED=1` (기본 1).
+________________________________________
 4.3 Daily Snapshot
 •	매일 1회 Audit Snapshot 생성
 •	외부 저장소(오프라인 백업) 보관

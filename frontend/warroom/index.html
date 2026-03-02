@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
+  <meta name="theme-color" content="#0f1419">
   <meta name="mobile-web-app-capable" content="yes">
   <title>Warroom CIC — Aegis-X v3</title>
+  <!-- Zero-Flash: 페인트 전 배경 확정 (FOUC 방지). ZERO_FLASH_SPEC §2 -->
+  <style id="zero-flash-critical">html,body{background:#0f1419;color:#e6edf3;margin:0;}</style>
   <style>
     * { box-sizing: border-box; }
     body { font-family: system-ui, -apple-system, sans-serif; margin: 0; background: #0f1419; color: #e6edf3; -webkit-tap-highlight-color: transparent; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
@@ -88,15 +91,13 @@
     </header>
     <div class="body-row">
       <nav class="left-menu" id="left-menu">
-        <a href="#" class="active">Global Overview</a>
-        <a href="#">Battlefield</a>
-        <a href="#">Fleet</a>
-        <a href="#">Regime Intelligence</a>
-        <a href="#">Allocation Matrix</a>
-        <a href="#">Orders & Execution</a>
-        <a href="#">Risk Control</a>
-        <a href="#">AAR & Battle Reports</a>
-        <a href="#">System Control Panel</a>
+        <a href="#" class="active" data-panel="overview">Overview</a>
+        <a href="#" data-panel="regime">Regime</a>
+        <a href="#" data-panel="allocation">Allocation</a>
+        <a href="#" data-panel="risk">Risk</a>
+        <a href="#" data-panel="orders">Orders</a>
+        <a href="#" data-panel="aar">AAR</a>
+        <a href="#" data-panel="system">System</a>
       </nav>
       <main class="main">
         <h2>Global Overview — Snapshot cards</h2>
@@ -105,7 +106,7 @@
       </main>
     </div>
     <footer class="footer">
-      Footer Ticker — Incident / Alert feed (placeholder)
+      <span id="footer-ticker">Incident / News feed (from DB snapshots or stub)</span>
     </footer>
   </div>
   <script>
@@ -174,6 +175,7 @@
     document.getElementById('btn-menu').onclick = function() { menuEl.classList.toggle('open'); };
 
     load();
+    // Zero-Flash: 전체 리로드 금지. 30초 주기 fetch만 사용. ZERO_FLASH_SPEC §3
     setInterval(load, 30000);
   </script>
 </body>

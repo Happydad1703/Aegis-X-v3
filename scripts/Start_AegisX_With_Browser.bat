@@ -1,7 +1,7 @@
 @echo off
-REM Aegis-X v3 — Backend 기동 후 브라우저 열기 (프로젝트 루트에서 실행)
-REM 프로젝트 루트: D:\AEGIS-X_v3
-cd /d "D:\AEGIS-X_v3"
+REM Aegis-X v3 — Backend 기동 후 브라우저 열기
+REM 프로젝트 루트: 이 스크립트 위치의 상위 폴더 (scripts\ 의 부모)
+cd /d "%~dp0.."
 
 set "PY=python"
 if exist ".venv\Scripts\python.exe" set "PY=.venv\Scripts\python.exe"
@@ -16,7 +16,7 @@ if %errorlevel% equ 0 (
 )
 
 echo Starting Aegis-X Backend...
-start "Aegis-X Backend" cmd /k "cd /d D:\AEGIS-X_v3 && %PY% -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --app-dir ."
+start "Aegis-X Backend" cmd /k "cd /d "%~dp0.." && %PY% -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --app-dir ."
 echo Waiting 8 seconds for server...
 timeout /t 8 /nobreak >nul
 start "" "http://localhost:8000/launcher/"

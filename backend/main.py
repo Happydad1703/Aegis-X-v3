@@ -21,10 +21,14 @@ app = FastAPI(title="Aegis-x v3")
 app.include_router(cic_router)
 app.include_router(control_router)
 
-# Warroom static
-_frontend = Path(__file__).resolve().parent.parent.parent / "frontend"
+# Warroom / Cockpit static
+_frontend = Path(__file__).resolve().parent.parent / "frontend"
+if not _frontend.is_dir():
+    _frontend = Path(__file__).resolve().parent.parent.parent / "frontend"
 if (_frontend / "warroom").is_dir():
     app.mount("/warroom", StaticFiles(directory=str(_frontend / "warroom"), html=True), name="warroom")
+if (_frontend / "cockpit" / "dist").is_dir():
+    app.mount("/cockpit", StaticFiles(directory=str(_frontend / "cockpit" / "dist"), html=True), name="cockpit")
 if (_frontend / "launcher").is_dir():
     app.mount("/launcher", StaticFiles(directory=str(_frontend / "launcher"), html=True), name="launcher")
 if (_frontend / "static").is_dir():
@@ -36,15 +40,19 @@ def healthz():
 
 @app.get("/api/health")
 async def api_health(db: AsyncSession = Depends(get_db)):
-    """Health from DB only (engine_heartbeat, comm_health). SOO §5, Phase 0-2-1."""
+    """Health from DB only: engine_heartbeat, comm_health, llm_status, operation_mode (T8)."""
     hb = await get_latest_snapshot(db, "engine_heartbeat")
     ch = await get_latest_snapshot(db, "comm_health")
+    llm = await get_latest_snapshot(db, "llm_status")
+    mode = await get_latest_snapshot(db, "operation_mode")
     return {
         "engine_heartbeat": hb,
         "comm_health": ch,
+        "llm_status": llm,
+        "operation_mode": mode,
         "meta": {
             "source": "engine_snapshot",
-            "required_keys": ["engine_heartbeat", "comm_health"],
+            "required_keys": ["engine_heartbeat", "comm_health", "llm_status", "operation_mode"],
         },
     }
 
