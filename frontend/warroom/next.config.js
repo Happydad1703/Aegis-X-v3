@@ -1,6 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // 배포용 단일 실행 번들 생성
+  output: "standalone",
+  turbopack: {
+    root: __dirname,
+  },
+  experimental: {
+    optimizePackageImports: ["lucide-react"],
+  },
   async headers() {
     return [{ source: "/:path*", headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }] }];
   },
@@ -11,4 +19,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+module.exports = nextConfig;

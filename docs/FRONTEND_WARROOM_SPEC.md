@@ -89,8 +89,6 @@ No undocumented key. Extension = add key to backend allowlist and use in UI.
 | GET | /api/health | Health payload |
 | GET | /api/control/state | E-Stop, Retract state |
 | POST | /api/control/command | EMERGENCY_STOP, RETRACT, SET_MODE, RUN_ENGINE_CYCLE |
-| GET | /api/orders?limit= | order_log read-only |
-| GET | /api/incidents?limit= | incident_log read-only |
 
 If Control API is not implemented: UI shows "Control: NOT IMPLEMENTED" and disables command buttons.
 

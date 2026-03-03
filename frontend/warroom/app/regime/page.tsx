@@ -13,8 +13,8 @@ export default function RegimePage() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold mb-2">Regime Intelligence</h1>
-      <p className="text-cic-muted text-sm mb-4">Read-only: regime_current. Raw JSON viewer for debugging.</p>
+      <h1 className="text-xl font-semibold mb-2">국면 인텔리전스</h1>
+      <p className="text-cic-muted text-sm mb-4">읽기 전용: regime_current. 디버깅용 원본 JSON 뷰어 포함.</p>
       <SnapshotCard snapshotKey="regime_current" snapshot={data} error={isError} />
     </div>
   );

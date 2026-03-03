@@ -23,15 +23,15 @@ export default function OrdersPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold mb-2">Orders and Execution</h1>
-      <p className="text-cic-muted text-sm mb-4">Read-only order_log. operation_mode from snapshot.</p>
+      <h1 className="text-xl font-semibold mb-2">주문/체결</h1>
+      <p className="text-cic-muted text-sm mb-4">읽기 전용 주문 기록 화면입니다. 운용 모드는 스냅샷 기반으로 표시됩니다.</p>
       <div className="mb-4 p-3 rounded border border-cic-border bg-cic-card">
-        <span className="text-cic-muted text-sm">operation_mode: </span>
+        <span className="text-cic-muted text-sm">운용 모드: </span>
         <span className="text-sm">{mode}</span>
       </div>
       <div className="bg-cic-card border border-cic-border rounded-lg p-4">
-        <h2 className="text-cic-accent font-medium mb-2">order_log latest 50</h2>
-        {isError && <p className="text-cic-danger text-sm">Failed to load orders.</p>}
+        <h2 className="text-cic-accent font-medium mb-2">최근 50건</h2>
+        {isError && <p className="text-cic-danger text-sm">주문 데이터를 불러오지 못했습니다.</p>}
         {!isError && (
           <>
             {showRaw ? (
@@ -43,11 +43,11 @@ export default function OrdersPage() {
                     #{o.id} {o.symbol} {o.side} {o.quantity} - {o.execution_status} @ {o.created_at ?? "-"}
                   </div>
                 ))}
-                {items.length > 20 && <p className="text-cic-muted text-xs">and {items.length - 20} more</p>}
+                {items.length > 20 && <p className="text-cic-muted text-xs">외 {items.length - 20}건</p>}
               </div>
             )}
             <button type="button" onClick={() => setShowRaw(!showRaw)} className="mt-2 text-xs text-cic-accent hover:underline">
-              {showRaw ? "Hide raw" : "Show raw JSON"}
+              {showRaw ? "원본 숨기기" : "원본 JSON 보기"}
             </button>
           </>
         )}

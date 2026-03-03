@@ -5,8 +5,8 @@ import { CICHeader } from "@/components/CICHeader";
 import { LeftNav } from "@/components/LeftNav";
 
 export const metadata: Metadata = {
-  title: "Aegis-X V3 Warroom / CIC",
-  description: "DB-Only Read Dashboard. No computation.",
+  title: "Aegis-X V3 워룸 지휘센터",
+  description: "스냅샷 읽기 전용 지휘 대시보드",
   manifest: "/manifest.json",
 };
 

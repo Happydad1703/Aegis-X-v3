@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Aegis-X v3 Launcher</title>
+  <title>Aegis-X v3 실행기</title>
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; font-family: system-ui, sans-serif; background: #0d1117; color: #e6edf3; }
@@ -27,23 +27,23 @@
 </head>
 <body>
   <div class="toolbar">
-    <h1>Aegis-X v3 Launcher</h1>
+    <h1>Aegis-X v3 실행기</h1>
     <a href="#" id="btn-single">단일 디스플레이 (세로 2분할)</a>
     <a href="#" id="btn-multi">복수 디스플레이 (창 분리)</a>
-    <span style="color:#8b949e; font-size:0.8rem;">Backend: <span id="backend-url">/</span></span>
+    <span style="color:#8b949e; font-size:0.8rem;">백엔드: <span id="backend-url">/</span></span>
   </div>
 
   <div id="view-single" class="single-panel">
     <div class="top">
-      <h2>Warroom</h2>
-      <iframe id="iframe-warroom" title="Warroom" src=""></iframe>
+      <h2>워룸</h2>
+      <iframe id="iframe-warroom" title="워룸" src=""></iframe>
     </div>
     <div class="bottom">
-      <h2>Dashboard & Control Panel</h2>
-      <iframe id="iframe-dashboard" title="Dashboard & Control" src=""></iframe>
+      <h2>대시보드 및 제어판</h2>
+      <iframe id="iframe-dashboard" title="대시보드 및 제어판" src=""></iframe>
     </div>
     <div class="wsl-bar">
-      <strong>WSL Terminal:</strong>
+      <strong>WSL 터미널:</strong>
       <a href="/static/run_wsl_terminal.bat" download="run_wsl_terminal.bat">run_wsl_terminal.bat 다운로드</a>
       <span style="color:#8b949e; font-size:0.8rem;">→ 다운로드 후 실행하거나, 프로젝트 루트에서 scripts\run_wsl_terminal.bat 실행</span>
     </div>
@@ -52,11 +52,11 @@
   <div id="view-multi" style="display:none; padding: 1rem;">
     <p>각 버튼을 클릭한 뒤 창을 원하는 모니터로 드래그하세요.</p>
     <div class="multi-buttons">
-      <button type="button" id="open-warroom">Warroom 열기 (창 1)</button>
-      <button type="button" id="open-dashboard">Dashboard & Control 열기 (창 2)</button>
+      <button type="button" id="open-warroom">워룸 열기 (창 1)</button>
+      <button type="button" id="open-dashboard">대시보드/제어 열기 (창 2)</button>
     </div>
     <div class="wsl-bar" style="margin-top: 1rem; border-radius: 8px;">
-      <strong>WSL Terminal:</strong>
+      <strong>WSL 터미널:</strong>
       <a href="/static/run_wsl_terminal.bat" download="run_wsl_terminal.bat">run_wsl_terminal.bat 다운로드</a>
     </div>
   </div>

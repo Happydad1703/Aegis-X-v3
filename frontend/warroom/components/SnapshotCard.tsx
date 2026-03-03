@@ -20,7 +20,7 @@ export function SnapshotCard({ snapshot, snapshotKey, error, locked }: Props) {
     return (
       <div className="bg-cic-card border border-cic-border rounded-lg p-4 border-l-4 border-cic-danger">
         <h3 className="text-cic-accent font-medium mb-2">{snapshotKey}</h3>
-        <p className="text-cic-danger text-sm">Error or no data. Retry or check API.</p>
+        <p className="text-cic-danger text-sm">오류 또는 데이터 없음. 다시 시도하거나 API 상태를 확인하세요.</p>
       </div>
     );
   }
@@ -29,16 +29,16 @@ export function SnapshotCard({ snapshot, snapshotKey, error, locked }: Props) {
     <div className={`bg-cic-card border border-cic-border rounded-lg p-4 ${fClass} relative`}>
       {locked && (
         <div className="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center z-10">
-          <span className="bg-cic-warn/90 text-black px-3 py-1 rounded text-sm font-medium">Read-only — 사령부 승인 필요</span>
+          <span className="bg-cic-warn/90 text-black px-3 py-1 rounded text-sm font-medium">읽기 전용 — 사령부 승인 필요</span>
         </div>
       )}
       <h3 className="text-cic-accent font-medium mb-2">{snapshot.snapshot_key}</h3>
       {/* Audit-first: source_name, generated_at, refresh_rate_sec, freshness_status */}
       <div className="text-xs text-cic-muted space-y-0.5 mb-2">
-        <span>source_name: {snapshot.source_name ?? "—"}</span>
-        <span className="block">generated_at: {snapshot.generated_at ?? "—"}</span>
-        <span className="block">refresh_rate_sec: {snapshot.refresh_rate_sec ?? "—"}</span>
-        <span className="block">freshness_status: {snapshot.freshness_status ?? "—"}</span>
+        <span>데이터 출처: {snapshot.source_name ?? "—"}</span>
+        <span className="block">생성 시각: {snapshot.generated_at ?? "—"}</span>
+        <span className="block">갱신 주기(초): {snapshot.refresh_rate_sec ?? "—"}</span>
+        <span className="block">신선도 상태: {snapshot.freshness_status ?? "—"}</span>
       </div>
       {showRaw ? (
         <pre className="text-xs overflow-auto max-h-64 bg-black/20 p-2 rounded break-all whitespace-pre-wrap">
@@ -54,7 +54,7 @@ export function SnapshotCard({ snapshot, snapshotKey, error, locked }: Props) {
         onClick={() => setShowRaw(!showRaw)}
         className="mt-2 text-xs text-cic-accent hover:underline"
       >
-        {showRaw ? "Hide raw" : "Show raw JSON"}
+        {showRaw ? "원본 숨기기" : "원본 JSON 보기"}
       </button>
     </div>
   );

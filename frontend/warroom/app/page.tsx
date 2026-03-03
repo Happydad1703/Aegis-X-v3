@@ -61,26 +61,26 @@ export default function WarroomHome() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold mb-2">CIC Warroom (총사령관 상황판)</h1>
+      <h1 className="text-xl font-semibold mb-2">총사령관 상황판</h1>
       <p className="text-cic-muted text-sm mb-4">
         V2 Warroom CIC 정보구조를 V3 스냅샷 계약으로 재구성했습니다. UI는 snapshot read-only이며 API 계산/직접 DB 조회를 하지 않습니다.
       </p>
       <CommanderHeader />
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 mb-4">
         <div className="bg-cic-card border border-cic-border rounded p-3">
-          <p className="text-xs text-cic-muted">Operation Mode</p>
+          <p className="text-xs text-cic-muted">운용 모드</p>
           <p className="text-sm font-semibold">{String(mode)}</p>
         </div>
         <div className="bg-cic-card border border-cic-border rounded p-3">
-          <p className="text-xs text-cic-muted">Active Session</p>
+          <p className="text-xs text-cic-muted">활성 세션</p>
           <p className="text-sm font-semibold">{String(session)} / {String(sessionState)}</p>
         </div>
         <div className="bg-cic-card border border-cic-border rounded p-3">
-          <p className="text-xs text-cic-muted">Regime</p>
+          <p className="text-xs text-cic-muted">국면</p>
           <p className="text-sm font-semibold">{String(regimeData.regime_label ?? regimeData.regime ?? "—")}</p>
         </div>
         <div className="bg-cic-card border border-cic-border rounded p-3">
-          <p className="text-xs text-cic-muted">Timezone</p>
+          <p className="text-xs text-cic-muted">시간대</p>
           <p className="text-sm font-semibold">{String(timezone)}</p>
         </div>
       </div>
@@ -90,7 +90,7 @@ export default function WarroomHome() {
         </div>
       )}
       <div className="bg-cic-card border border-cic-border rounded p-4 mb-4">
-        <h2 className="text-cic-accent font-medium mb-2">Key Alerts / Incidents (Snapshot-based)</h2>
+        <h2 className="text-cic-accent font-medium mb-2">핵심 경보/사건</h2>
         {alerts.length === 0 ? (
           <p className="text-sm text-cic-muted">risk_guard, comm_health, regime_current 스냅샷에 경보 데이터가 없습니다.</p>
         ) : (
@@ -101,7 +101,7 @@ export default function WarroomHome() {
           </ul>
         )}
       </div>
-      <h2 className="text-cic-accent font-medium mb-2">Fleet / Risk / Targets Snapshot Board</h2>
+      <h2 className="text-cic-accent font-medium mb-2">함대/리스크/타깃 스냅샷 보드</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {CIC_KEYS.map((key, i) => (
           <SnapshotCard key={key} snapshotKey={key} snapshot={queries[i].data} error={queries[i].isError} locked={anyRed} />

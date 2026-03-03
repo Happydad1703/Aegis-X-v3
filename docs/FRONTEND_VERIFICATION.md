@@ -20,8 +20,8 @@ Checklist and run method for Warroom/CIC.
 1. / loads (Warroom Home).
 2. / shows 6 core snapshot areas.
 3. /regime loads.
-4. Header shows connection or degrade state.
-5. Snapshot cards show audit metadata (source_name, generated_at, freshness_status).
+4. API down mock -> header shows DISCONNECTED, app does not crash.
+5. Freshness RED mock -> read-only lock + control buttons disabled.
 
 Run: `cd frontend/warroom && npx playwright install chromium && npm run test:e2e`
 

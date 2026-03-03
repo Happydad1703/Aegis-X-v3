@@ -1,0 +1,27 @@
+{
+  "name": "aegis-x-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Aegis-X V3 frontend workspace (warroom + cockpit)",
+  "scripts": {
+    "dev:warroom": "npm --prefix warroom run dev",
+    "dev:cockpit": "npm --prefix cockpit run dev",
+    "build": "npm --prefix warroom run build && npm --prefix cockpit run build",
+    "build:warroom": "npm --prefix warroom run build",
+    "build:cockpit": "npm --prefix cockpit run build",
+    "test:e2e:warroom": "npm --prefix warroom run test:e2e",
+    "test:e2e:cockpit": "npm --prefix cockpit run test:e2e"
+  },
+  "keywords": [
+    "aegis-x",
+    "dashboard",
+    "warroom",
+    "cockpit"
+  ],
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "autoprefixer": "^10.4.27",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^4.2.1"
+  }
+}

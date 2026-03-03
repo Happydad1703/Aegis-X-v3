@@ -22,7 +22,7 @@ type ActionSpec = {
 const ACTIONS: ActionSpec[] = [
   {
     key: "RUN_ENGINE_CYCLE",
-    label: "Run Engine Cycle",
+    label: "엔진 사이클 실행",
     description: "엔진 1사이클 실행을 발령합니다.",
     cmd: "COMMAND",
     commandType: "RUN_ENGINE_CYCLE",
@@ -30,7 +30,7 @@ const ACTIONS: ActionSpec[] = [
   },
   {
     key: "SET_MODE_BACKTEST",
-    label: "SET_MODE BACKTEST",
+    label: "모드 전환 백테스트",
     description: "운용 모드를 BACKTEST로 전환합니다.",
     cmd: "COMMAND",
     commandType: "SET_MODE",
@@ -39,7 +39,7 @@ const ACTIONS: ActionSpec[] = [
   },
   {
     key: "SET_MODE_PAPER",
-    label: "SET_MODE PAPER",
+    label: "모드 전환 페이퍼",
     description: "운용 모드를 PAPER로 전환합니다.",
     cmd: "COMMAND",
     commandType: "SET_MODE",
@@ -48,7 +48,7 @@ const ACTIONS: ActionSpec[] = [
   },
   {
     key: "SET_MODE_PILOT",
-    label: "SET_MODE PILOT",
+    label: "모드 전환 파일럿",
     description: "운용 모드를 PILOT로 전환합니다.",
     cmd: "COMMAND",
     commandType: "SET_MODE",
@@ -57,7 +57,7 @@ const ACTIONS: ActionSpec[] = [
   },
   {
     key: "EMERGENCY_STOP",
-    label: "EMERGENCY STOP",
+    label: "긴급 중지",
     description: "즉시 긴급중지(E-Stop)를 발령합니다.",
     cmd: "COMMAND",
     commandType: "EMERGENCY_STOP",
@@ -66,7 +66,7 @@ const ACTIONS: ActionSpec[] = [
   },
   {
     key: "RETRACT",
-    label: "RETRACT",
+    label: "리트랙트",
     description: "리스크 통제를 위해 리트랙트를 발령합니다.",
     cmd: "COMMAND",
     commandType: "RETRACT",
@@ -75,7 +75,7 @@ const ACTIONS: ActionSpec[] = [
   },
   {
     key: "LLM_BLACKOUT_ON",
-    label: "LLM BLACKOUT ON",
+    label: "LLM 블랙아웃 켜기",
     description: "LLM blackout policy를 활성화합니다.",
     cmd: "COMMAND",
     commandType: "SET_LLM_BLACKOUT",
@@ -85,7 +85,7 @@ const ACTIONS: ActionSpec[] = [
   },
   {
     key: "LLM_BLACKOUT_OFF",
-    label: "LLM BLACKOUT OFF",
+    label: "LLM 블랙아웃 끄기",
     description: "LLM blackout policy를 비활성화합니다.",
     cmd: "COMMAND",
     commandType: "SET_LLM_BLACKOUT",
@@ -94,7 +94,7 @@ const ACTIONS: ActionSpec[] = [
   },
   {
     key: "RESUME",
-    label: "RESUME (Clear Stop/Retract)",
+    label: "운영 재개",
     description: "중지/리트랙트 상태를 해제하고 운영을 재개합니다.",
     cmd: "RESUME",
     defaultReason: "Commander release",
@@ -168,33 +168,33 @@ export default function ControlPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold mb-2">Control Panel (총사령관)</h1>
+      <h1 className="text-xl font-semibold mb-2">제어 패널 (총사령관)</h1>
       <p className="text-cic-muted text-sm mb-4">
         실행상태 점검 + 작전 제어 패널입니다. 쓰기 동작은 Control API만 호출하며, UI에서 직접 DB를 갱신하지 않습니다.
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
         <div className="bg-cic-card border border-cic-border rounded p-3">
-          <p className="text-xs text-cic-muted">Execution Check</p>
-          <p className="text-sm font-semibold">{checkSummary.ok}/{checkSummary.total} OK</p>
+          <p className="text-xs text-cic-muted">실행 점검</p>
+          <p className="text-sm font-semibold">{checkSummary.ok}/{checkSummary.total} 정상</p>
         </div>
         <div className="bg-cic-card border border-cic-border rounded p-3">
-          <p className="text-xs text-cic-muted">Freshness RED</p>
+          <p className="text-xs text-cic-muted">신선도 적색</p>
           <p className="text-sm font-semibold">{checkSummary.red}</p>
         </div>
         <div className="bg-cic-card border border-cic-border rounded p-3">
-          <p className="text-xs text-cic-muted">Emergency Stop</p>
-          <p className="text-sm font-semibold">{state?.emergency_stop ? "ON" : "OFF"}</p>
+          <p className="text-xs text-cic-muted">긴급 중지</p>
+          <p className="text-sm font-semibold">{state?.emergency_stop ? "활성" : "비활성"}</p>
         </div>
         <div className="bg-cic-card border border-cic-border rounded p-3">
-          <p className="text-xs text-cic-muted">Retract / LLM Blackout</p>
-          <p className="text-sm font-semibold">{state?.retract ? "ON" : "OFF"} / {state?.llm_blackout ? "ON" : "OFF"}</p>
+          <p className="text-xs text-cic-muted">리트랙트 / LLM 블랙아웃</p>
+          <p className="text-sm font-semibold">{state?.retract ? "활성" : "비활성"} / {state?.llm_blackout ? "활성" : "비활성"}</p>
         </div>
       </div>
 
       {controlAvailable ? (
         <div className="bg-cic-card border border-cic-border rounded p-4 mb-4">
-          <h2 className="text-cic-accent font-medium mb-1">Operational Commands</h2>
+          <h2 className="text-cic-accent font-medium mb-1">운영 명령</h2>
           <p className="text-xs text-cic-muted mb-3">V2 흐름: 발령 버튼 → 사유 입력/확인 → 상태 반영</p>
           <div className="flex flex-wrap gap-2">
             {ACTIONS.map((spec) => (
@@ -212,7 +212,7 @@ export default function ControlPage() {
         </div>
       ) : (
         <p className="text-cic-muted text-sm border border-cic-border rounded px-3 py-2 mb-4">
-          Control API: NOT IMPLEMENTED
+          제어 API: 미구현
         </p>
       )}
 

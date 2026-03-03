@@ -25,12 +25,12 @@ type NarrativeRow = {
 function classifyNarrative(text: string): NarrativeRow {
   const t = text.toLowerCase();
   if (t.includes("stop") || t.includes("fail") || t.includes("error") || t.includes("halt")) {
-    return { severity: "RED", category: "Execution Risk", action: "즉시 점검 발령", summary: text, source: "alerts" };
+    return { severity: "RED", category: "실행 리스크", action: "즉시 점검 발령", summary: text, source: "alerts" };
   }
   if (t.includes("warn") || t.includes("caution") || t.includes("latency") || t.includes("degraded")) {
-    return { severity: "AMBER", category: "System Warning", action: "모니터링 강화", summary: text, source: "alerts" };
+    return { severity: "AMBER", category: "시스템 경고", action: "모니터링 강화", summary: text, source: "alerts" };
   }
-  return { severity: "GREEN", category: "Operational Note", action: "상태 유지", summary: text, source: "alerts" };
+  return { severity: "GREEN", category: "운영 참고", action: "상태 유지", summary: text, source: "alerts" };
 }
 
 function rowTone(severity: NarrativeRow["severity"]): string {
@@ -93,7 +93,7 @@ export default function RiskPage() {
       const severity: NarrativeRow["severity"] = sev === "RED" ? "RED" : sev === "GREEN" ? "GREEN" : "AMBER";
       return {
         severity,
-        category: String(o.category ?? o.type ?? "Incident"),
+        category: String(o.category ?? o.type ?? "사건"),
         action: String(o.action ?? o.recommendation ?? "모니터링 강화"),
         summary: String(o.summary ?? o.message ?? JSON.stringify(o)),
         source: "incidents_latest",
@@ -104,8 +104,8 @@ export default function RiskPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold mb-2">Risk Guard / Incidents</h1>
-      <p className="text-cic-muted text-sm mb-4">Read-only: risk_guard / regime_current / usd_exposure_status / session_state / comm_health snapshots.</p>
+      <h1 className="text-xl font-semibold mb-2">리스크 가드/사건</h1>
+      <p className="text-cic-muted text-sm mb-4">읽기 전용 리스크/세션/통신 상태 스냅샷입니다.</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <SnapshotCard snapshotKey="risk_guard" snapshot={riskSnap} error={riskErr} />
         <SnapshotCard snapshotKey="regime_current" snapshot={regimeSnap} />
@@ -115,9 +115,9 @@ export default function RiskPage() {
         <SnapshotCard snapshotKey="session_state" snapshot={extra[1].data} error={extra[1].isError} />
       </div>
       <div className="bg-cic-card border border-cic-border rounded-lg p-4">
-        <h2 className="text-cic-accent font-medium mb-2">Incidents Narrative Mapping (V2 Style)</h2>
+        <h2 className="text-cic-accent font-medium mb-2">사건 내러티브 매핑</h2>
         <p className="text-xs text-cic-muted mb-3">
-          incidents_latest + risk_guard/comm_health/regime_current alerts를 표시용 분류(Severity/Category/Action)로 매핑합니다.
+          사건 스냅샷과 경보를 화면 표시용 분류(심각도/분류/권고)로 매핑합니다.
         </p>
         {showRaw ? (
           <pre className="text-xs overflow-auto max-h-80 bg-black/20 p-2 rounded">{JSON.stringify(narrativeRows, null, 2)}</pre>
@@ -133,11 +133,11 @@ export default function RiskPage() {
                 <p>{row.summary}</p>
               </div>
             ))}
-            {narrativeRows.length === 0 && <p className="text-cic-muted">표시할 incidents/alerts가 없습니다.</p>}
+            {narrativeRows.length === 0 && <p className="text-cic-muted">표시할 사건/경보가 없습니다.</p>}
           </div>
         )}
         <button type="button" onClick={() => setShowRaw(!showRaw)} className="mt-2 text-xs text-cic-accent hover:underline">
-          {showRaw ? "Hide raw" : "Show raw JSON"}
+          {showRaw ? "원본 숨기기" : "원본 JSON 보기"}
         </button>
       </div>
     </div>

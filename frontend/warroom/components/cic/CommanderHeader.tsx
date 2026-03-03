@@ -62,7 +62,7 @@ export function CommanderHeader() {
   return (
     <section className="bg-cic-card border border-cic-border rounded-lg p-4 mb-4">
       <div className="flex items-center justify-between gap-2 mb-3">
-        <h2 className="text-cic-accent font-semibold">Commander Summary Header</h2>
+        <h2 className="text-cic-accent font-semibold">지휘 요약 헤더</h2>
         <span className="text-xs text-cic-muted">최근 갱신: {String(updatedAt)}</span>
       </div>
 
@@ -76,21 +76,21 @@ export function CommanderHeader() {
           <p className="text-sm font-semibold">{String(session)}</p>
         </div>
         <div className="border border-cic-border rounded p-3">
-          <p className="text-xs text-cic-muted">Regime</p>
+          <p className="text-xs text-cic-muted">국면</p>
           <p className="text-sm font-semibold">{String(regime)}</p>
         </div>
         <div className="border border-cic-border rounded p-3">
-          <p className="text-xs text-cic-muted">Gate / Risk</p>
+          <p className="text-xs text-cic-muted">게이트 / 리스크</p>
           <span className={`inline-flex px-2 py-0.5 mt-1 rounded border text-xs ${badgeTone(riskGate)}`}>
             {riskGate}
           </span>
         </div>
         <div className="border border-cic-border rounded p-3">
-          <p className="text-xs text-cic-muted">Comm · LLM · Engine</p>
+          <p className="text-xs text-cic-muted">통신 · LLM · 엔진</p>
           <p className="text-sm">{commState} / {llmState} / {hbState}</p>
         </div>
         <div className="border border-cic-border rounded p-3">
-          <p className="text-xs text-cic-muted">Freshness</p>
+          <p className="text-xs text-cic-muted">신선도</p>
           <span className={`inline-flex px-2 py-0.5 mt-1 rounded border text-xs ${freshnessTone(freshness)}`}>
             {freshness}
           </span>

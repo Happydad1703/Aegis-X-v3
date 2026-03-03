@@ -32,8 +32,8 @@ export default function FleetPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold mb-2">Fleet Command</h1>
-      <p className="text-cic-muted text-sm mb-4">Core / Swing / Strike / Reserved Fleet 상황 보드. 모든 정보는 snapshot read-only 입니다.</p>
+      <h1 className="text-xl font-semibold mb-2">함대 지휘</h1>
+      <p className="text-cic-muted text-sm mb-4">코어/스윙/스트라이크/예비 함대 상황 보드입니다. 모든 정보는 스냅샷 읽기 전용입니다.</p>
 
       <FourForcesPanel
         budget={queries[0].data}
@@ -45,19 +45,19 @@ export default function FleetPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
         <div className="bg-cic-card border border-cic-border rounded p-3">
-          <p className="text-xs text-cic-muted">Core</p>
+          <p className="text-xs text-cic-muted">코어</p>
           <p className="text-sm font-semibold">{summary(snapshots[2])}</p>
         </div>
         <div className="bg-cic-card border border-cic-border rounded p-3">
-          <p className="text-xs text-cic-muted">Swing</p>
+          <p className="text-xs text-cic-muted">스윙</p>
           <p className="text-sm font-semibold">{summary(snapshots[3])}</p>
         </div>
         <div className="bg-cic-card border border-cic-border rounded p-3">
-          <p className="text-xs text-cic-muted">Strike</p>
+          <p className="text-xs text-cic-muted">스트라이크</p>
           <p className="text-sm font-semibold">{summary(snapshots[4])}</p>
         </div>
         <div className="bg-cic-card border border-cic-border rounded p-3">
-          <p className="text-xs text-cic-muted">Reserved Fleet</p>
+          <p className="text-xs text-cic-muted">예비 함대</p>
           <p className="text-sm font-semibold">{summary(snapshots[1])}</p>
         </div>
       </div>

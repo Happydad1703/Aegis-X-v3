@@ -38,7 +38,7 @@ export function ConfirmActionModal({
       <div className="w-full max-w-lg bg-cic-card border border-cic-border rounded-lg p-4">
         <h3 className="text-cic-accent font-semibold mb-2">{title}</h3>
         <p className="text-sm text-cic-muted mb-3">{description}</p>
-        <label className="block text-xs text-cic-muted mb-1">사유(Reason)</label>
+        <label className="block text-xs text-cic-muted mb-1">사유</label>
         <textarea
           value={reason}
           onChange={(e) => setReason(e.target.value)}

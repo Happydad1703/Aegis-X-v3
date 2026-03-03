@@ -8,15 +8,35 @@ const TIMEOUT_MS = 15_000;
 const RETRIES = 2;
 
 export type ApiError = { status: number; message: string; body?: unknown };
+export type ApiTelemetry = {
+  lastUpdatedIso: string | null;
+  lastLatencyMs: number | null;
+};
+
+let telemetry: ApiTelemetry = {
+  lastUpdatedIso: null,
+  lastLatencyMs: null,
+};
+
+function updateTelemetry(latencyMs: number | null) {
+  telemetry = {
+    lastUpdatedIso: new Date().toISOString(),
+    lastLatencyMs: latencyMs,
+  };
+}
 
 async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  const start = typeof performance !== "undefined" ? performance.now() : Date.now();
   try {
     const res = await fetch(url, { ...init, signal: controller.signal });
+    const end = typeof performance !== "undefined" ? performance.now() : Date.now();
+    updateTelemetry(Math.round(end - start));
     clearTimeout(id);
     return res;
   } catch (e) {
+    updateTelemetry(null);
     clearTimeout(id);
     throw e;
   }
@@ -49,4 +69,8 @@ export async function apiJson<T>(path: string, init?: RequestInit): Promise<T> {
 
 export function getApiBase(): string {
   return BASE || "";
+}
+
+export function getApiTelemetry(): ApiTelemetry {
+  return telemetry;
 }

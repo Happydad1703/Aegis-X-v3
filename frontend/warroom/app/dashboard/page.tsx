@@ -34,27 +34,27 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <h1 className="text-xl font-semibold mb-2">Phoenix Dashboard</h1>
+      <h1 className="text-xl font-semibold mb-2">피닉스 대시보드</h1>
       <p className="text-cic-muted text-sm mb-4">
         운영 모니터링 중심 화면입니다. V2 패널 순서를 채용했고, 모든 위젯은 `/api/snapshot/*` read-only 응답만 사용합니다.
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
         <div className="bg-cic-card border border-cic-border rounded p-3">
-          <p className="text-xs text-cic-muted">Snapshot Nodes</p>
+          <p className="text-xs text-cic-muted">스냅샷 노드 수</p>
           <p className="text-sm font-semibold">{DASH_KEYS.length}</p>
         </div>
         <div className="bg-cic-card border border-cic-border rounded p-3">
-          <p className="text-xs text-cic-muted">Freshness RED</p>
+          <p className="text-xs text-cic-muted">신선도 적색</p>
           <p className="text-sm font-semibold">{redCount}</p>
         </div>
         <div className="bg-cic-card border border-cic-border rounded p-3">
-          <p className="text-xs text-cic-muted">Engine Health</p>
-          <p className="text-sm font-semibold">{byKey.engine_heartbeat ? "ONLINE" : "N/A"}</p>
+          <p className="text-xs text-cic-muted">엔진 상태</p>
+          <p className="text-sm font-semibold">{byKey.engine_heartbeat ? "정상" : "없음"}</p>
         </div>
         <div className="bg-cic-card border border-cic-border rounded p-3">
-          <p className="text-xs text-cic-muted">Risk Guard</p>
-          <p className="text-sm font-semibold">{byKey.risk_guard ? "TRACKING" : "N/A"}</p>
+          <p className="text-xs text-cic-muted">리스크 감시</p>
+          <p className="text-sm font-semibold">{byKey.risk_guard ? "추적중" : "없음"}</p>
         </div>
       </div>
 
