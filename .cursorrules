@@ -8,3 +8,11 @@
 
 ---
 Full: docs/Cursor_Developer_Mode_Hard_Lock.md | SOO: docs/Cursor_SOO_Phase0_1.md | Guardrails: docs/Cursor_Guardrails_SE_Enforcement.md | Context: docs/Context_Summary_For_New_Chat.md
+Ops: docs/ai_memory/WARROOM_INCIDENT_CHECKLIST.md (must read for incident/operations tasks)
+
+Mandatory first-read context (all normal development tasks):
+- docs/ai_memory/AI_CONTEXT_INDEX.md
+- docs/ai_memory/AI_SESSION_STATE.md
+
+Mandatory additional first-read context (incident/operations tasks):
+- docs/ai_memory/WARROOM_INCIDENT_CHECKLIST.md
